@@ -2,6 +2,7 @@
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ComponentRenderer, Component } from "@/components/component-renders";
+import { HeroData } from "@/components/hero/hero";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -33,7 +34,12 @@ interface SiteData {
 }
 
 const componentTemplates = [
-  { type: "hero", name: "Hero", description: "A large hero section" },
+  {
+    type: "hero",
+    name: "Hero Section",
+    description:
+      "A customizable hero section with title, description, and buttons",
+  },
   { type: "text", name: "Text Block", description: "A simple text block" },
 ];
 
@@ -83,25 +89,48 @@ function BuilderContent() {
       type: type,
       style: style,
       content: `${type} content`,
-      navbarData:
-        type === "navbar"
-          ? {
-              logoText: "Brand",
-              links: [
-                { id: "1", text: "Home", href: "#" },
-                { id: "2", text: "About", href: "#about" },
-              ],
-              buttons: [
-                {
-                  id: "1",
-                  text: "Sign Up",
-                  variant: "primary",
-                  href: "#signup",
-                },
-              ],
-            }
-          : undefined,
     };
+
+    // Add specific data based on component type
+    if (type === "navbar") {
+      newComponent.navbarData = {
+        logoText: "Brand",
+        links: [
+          { id: "1", text: "Home", href: "#" },
+          { id: "2", text: "About", href: "#about" },
+        ],
+        buttons: [
+          {
+            id: "1",
+            text: "Sign Up",
+            variant: "primary",
+            href: "#signup",
+          },
+        ],
+      };
+    } else if (type === "hero") {
+      const defaultHeroData: HeroData = {
+        title: "Welcome to Our Amazing Platform",
+        subtitle: "Build Something Great",
+        description:
+          "Create beautiful, responsive websites with our intuitive drag-and-drop builder. No coding required.",
+        layout: "center",
+        backgroundType: "gradient",
+        backgroundColor: "primary",
+        gradientFrom: "primary",
+        gradientTo: "secondary",
+        textColor: "primary-foreground",
+        buttons: [
+          { id: "1", text: "Get Started", variant: "primary", href: "#" },
+          { id: "2", text: "Learn More", variant: "outline", href: "#" },
+        ],
+        showImage: false,
+        imageUrl: "",
+        imageAlt: "Hero image",
+      };
+      newComponent.heroData = defaultHeroData;
+      newComponent.content = ""; // Hero doesn't use the content field
+    }
 
     const updatedSiteData = { ...siteData };
     if (!updatedSiteData.pages[currentPage]) {
@@ -308,7 +337,7 @@ function BuilderContent() {
 
           {/* Other Components */}
           <div className="p-4 flex-1 overflow-y-auto">
-            <h3 className="font-semibold mb-2">Other Components</h3>
+            <h3 className="font-semibold mb-2">Components</h3>
             {componentTemplates.map((template) => (
               <Card
                 key={template.type}

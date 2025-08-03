@@ -7,7 +7,8 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Navbar1 } from "./navbar/navbar-1";
 import { Navbar2 } from "./navbar/navbar-2";
-import { Navbar3 } from "./navbar/navbar-3"; 
+import { Navbar3 } from "./navbar/navbar-3";
+import { Hero, HeroData } from "./hero/hero";
 
 export interface Component {
   id: string;
@@ -24,6 +25,7 @@ export interface Component {
       href?: string;
     }>;
   };
+  heroData?: HeroData;
 }
 
 interface ComponentRendererProps {
@@ -57,14 +59,14 @@ const SortableWrapper = ({
         variant="destructive"
         size="icon"
         onClick={onRemove}
-        className="absolute top-4 right-4 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity z-20"
+        className="absolute top-4 right-4 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity z-30"
       >
         <X className="h-3 w-3" />
       </Button>
       <div
         {...attributes}
         {...listeners}
-        className="absolute top-4 left-4 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity z-20 cursor-grab"
+        className="absolute top-4 left-4 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity z-30 cursor-grab"
       >
         <GripVertical className="h-5 w-5 text-muted-foreground" />
       </div>
@@ -86,6 +88,10 @@ export function ComponentRenderer({
     onUpdate?.(componentId, newNavbarData);
   };
 
+  const handleHeroUpdate = (componentId: string, newHeroData: any) => {
+    onUpdate?.(componentId, newHeroData);
+  };
+
   const handleRemove = () => {
     onRemove?.(component.id);
   };
@@ -93,7 +99,7 @@ export function ComponentRenderer({
   const renderComponent = () => {
     switch (component.type) {
       case "navbar":
-        const props = {
+        const navbarProps = {
           logoText: component.navbarData?.logoText || "Brand",
           links: component.navbarData?.links || [],
           buttons: component.navbarData?.buttons || [],
@@ -103,31 +109,41 @@ export function ComponentRenderer({
         };
         switch (component.style) {
           case "style-2":
-            return <Navbar2 {...props} />;
+            return <Navbar2 {...navbarProps} />;
           case "style-3":
-            return <Navbar3 {...props} />; // Add this case
+            return <Navbar3 {...navbarProps} />;
           case "style-1":
           default:
-            return <Navbar1 {...props} />;
+            return <Navbar1 {...navbarProps} />;
         }
 
       case "hero":
-        if (isPreview) {
-          return (
-            <div className="text-secondary-foreground bg-secondary py-20 text-center">
-              <h1 className="text-4xl font-bold">{component.content}</h1>
-            </div>
-          );
-        }
+        const defaultHeroData: HeroData = {
+          title: "Welcome to Our Amazing Platform",
+          subtitle: "Build Something Great",
+          description: "Create beautiful, responsive websites with our intuitive drag-and-drop builder. No coding required.",
+          layout: "center",
+          backgroundType: "gradient",
+          backgroundColor: "hsl(var(--primary))",
+          gradientFrom: "hsl(var(--primary))",
+          gradientTo: "hsl(var(--secondary))",
+          textColor: "hsl(var(--primary-foreground))",
+          buttons: [
+            { id: "1", text: "Get Started", variant: "primary", href: "#" },
+            { id: "2", text: "Learn More", variant: "outline", href: "#" }
+          ],
+          showImage: false,
+          imageUrl: "",
+          imageAlt: "Hero image"
+        };
+
         return (
-          <Card className="bg-secondary text-center text-secondary-foreground py-8">
-            <Textarea
-              value={component.content}
-              onChange={(e) => handleContentChange(e.target.value)}
-              className="bg-transparent border-none w-full text-2xl font-bold text-center shadow-none resize-none focus-visible:ring-0"
-              placeholder="Hero title"
-            />
-          </Card>
+          <Hero
+            heroData={component.heroData || defaultHeroData}
+            isEditable={!isPreview}
+            onUpdate={handleHeroUpdate}
+            componentId={component.id}
+          />
         );
 
       case "text":
