@@ -15,7 +15,26 @@ interface SiteData {
   };
 }
 
-function normalizeComponent(component: any): Component {
+// Define the shape of raw component data from localStorage
+interface RawComponentData {
+  id: string;
+  type: string;
+  style?: string;
+  content?: string;
+  navbarData?: {
+    logoText?: string;
+    links?: Array<{ id: string; text: string; href?: string }>;
+    buttons?: Array<{
+      id: string;
+      text: string;
+      variant: "primary" | "secondary" | "outline";
+      href?: string;
+    }>;
+  };
+  heroData?: HeroData;
+}
+
+function normalizeComponent(component: RawComponentData): Component {
   const normalized: Component = {
     id: component.id,
     type: component.type,
@@ -65,11 +84,11 @@ function PreviewContent() {
       const savedSite = localStorage.getItem(`site_${siteId}`);
       if (savedSite) {
         try {
-          const parsedData = JSON.parse(savedSite);
+          const parsedData = JSON.parse(savedSite) as { pages?: { [key: string]: { components?: RawComponentData[] } } };
           const normalizedData: SiteData = { pages: {} };
 
           Object.keys(parsedData.pages || {}).forEach((pageName) => {
-            const page = parsedData.pages[pageName];
+            const page = parsedData.pages?.[pageName];
             if (page && Array.isArray(page.components)) {
               normalizedData.pages[pageName] = {
                 components: page.components.map(normalizeComponent),

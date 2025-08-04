@@ -177,7 +177,7 @@ export default function HomePage() {
                         <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                         <AlertDialogDescription>
                           This action cannot be undone. This will permanently
-                          delete your site "{site.name}".
+                          delete your site &apos;{site.name}&apos;.
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>

@@ -6,12 +6,22 @@ import { MobileMenu } from "./mobile-menu";
 import { Menu } from "lucide-react";
 import { Input } from "../ui/input";
 
+interface NavbarData {
+  links: NavLink[];
+  buttons: ActionButton[];
+  logoText: string;
+}
+
+interface ComponentUpdate {
+  navbarData: NavbarData;
+}
+
 interface NavbarProps {
   logoText?: string;
   links?: NavLink[];
   buttons?: ActionButton[];
   isEditable?: boolean;
-  onUpdate?: (componentId: string, newContent: any) => void;
+  onUpdate?: (componentId: string, newContent: ComponentUpdate) => void;
   onRemove?: (componentId: string) => void;
   componentId?: string;
 }
@@ -29,9 +39,14 @@ export function Navbar1({
   const [currentButtons, setCurrentButtons] = useState(buttons);
   const [currentLogoText, setCurrentLogoText] = useState(logoText);
 
-  const updateComponent = (newData: any) => {
+  const updateComponent = (newData: Partial<NavbarData>) => {
     onUpdate?.(componentId, {
-      navbarData: { ...newData, logoText: currentLogoText },
+      navbarData: {
+        links: currentLinks,
+        buttons: currentButtons,
+        logoText: currentLogoText,
+        ...newData,
+      },
     });
   };
 
@@ -53,7 +68,11 @@ export function Navbar1({
     updateComponent({ links: updatedLinks, buttons: currentButtons });
   };
 
-  const handleUpdateLink = (linkId: string, newText: string, newHref?: string) => {
+  const handleUpdateLink = (
+    linkId: string,
+    newText: string,
+    newHref?: string
+  ) => {
     const updatedLinks = currentLinks.map((link) =>
       link.id === linkId ? { ...link, text: newText, href: newHref } : link
     );
@@ -68,22 +87,41 @@ export function Navbar1({
   };
 
   const handleAddButton = () => {
-    const newButton = { id: Date.now().toString(), text: "Button", variant: "primary" as const, href: "#" };
+    const newButton = {
+      id: Date.now().toString(),
+      text: "Button",
+      variant: "primary" as const,
+      href: "#",
+    };
     const updatedButtons = [...currentButtons, newButton];
     setCurrentButtons(updatedButtons);
     updateComponent({ links: currentLinks, buttons: updatedButtons });
   };
 
-  const handleUpdateButton = (buttonId: string, newText: string, newVariant: string, newHref?: string) => {
+  const handleUpdateButton = (
+    buttonId: string,
+    newText: string,
+    newVariant: string,
+    newHref?: string
+  ) => {
     const updatedButtons = currentButtons.map((button) =>
-      button.id === buttonId ? { ...button, text: newText, variant: newVariant as any, href: newHref } : button
+      button.id === buttonId
+        ? {
+            ...button,
+            text: newText,
+            variant: newVariant as ActionButton["variant"],
+            href: newHref,
+          }
+        : button
     );
     setCurrentButtons(updatedButtons);
     updateComponent({ links: currentLinks, buttons: updatedButtons });
   };
 
   const handleRemoveButton = (buttonId: string) => {
-    const updatedButtons = currentButtons.filter((button) => button.id !== buttonId);
+    const updatedButtons = currentButtons.filter(
+      (button) => button.id !== buttonId
+    );
     setCurrentButtons(updatedButtons);
     updateComponent({ links: currentLinks, buttons: updatedButtons });
   };
@@ -101,7 +139,9 @@ export function Navbar1({
                 placeholder="Brand"
               />
             ) : (
-              <a href="#" className="text-xl font-bold">{currentLogoText}</a>
+              <a href="#" className="text-xl font-bold">
+                {currentLogoText}
+              </a>
             )}
           </div>
 
@@ -126,7 +166,11 @@ export function Navbar1({
           </div>
 
           <div className="md:hidden">
-            <Button variant="ghost" size="sm" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            >
               <Menu className="h-6 w-6" />
             </Button>
           </div>

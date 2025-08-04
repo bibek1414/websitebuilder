@@ -28,10 +28,33 @@ export interface Component {
   heroData?: HeroData;
 }
 
+interface NavbarUpdateData {
+  navbarData: {
+    logoText: string;
+    links: Array<{ id: string; text: string; href?: string }>;
+    buttons: Array<{
+      id: string;
+      text: string;
+      variant: "primary" | "secondary" | "outline";
+      href?: string;
+    }>;
+  };
+}
+
+interface HeroUpdateData {
+  heroData: HeroData;
+}
+
+interface TextUpdateData {
+  content: string;
+}
+
+type ComponentUpdateData = NavbarUpdateData | HeroUpdateData | TextUpdateData;
+
 interface ComponentRendererProps {
   component: Component;
   isPreview?: boolean;
-  onUpdate?: (componentId: string, newContent: any) => void;
+  onUpdate?: (componentId: string, newContent: ComponentUpdateData) => void;
   onRemove?: (componentId: string) => void;
 }
 
@@ -81,14 +104,20 @@ export function ComponentRenderer({
   onRemove,
 }: ComponentRendererProps) {
   const handleContentChange = (newContent: string) => {
-    onUpdate?.(component.id, { content: newContent });
+    onUpdate?.(component.id, { content: newContent } as TextUpdateData);
   };
 
-  const handleNavbarUpdate = (componentId: string, newNavbarData: any) => {
+  const handleNavbarUpdate = (
+    componentId: string,
+    newNavbarData: NavbarUpdateData
+  ) => {
     onUpdate?.(componentId, newNavbarData);
   };
 
-  const handleHeroUpdate = (componentId: string, newHeroData: any) => {
+  const handleHeroUpdate = (
+    componentId: string,
+    newHeroData: HeroUpdateData
+  ) => {
     onUpdate?.(componentId, newHeroData);
   };
 
@@ -121,7 +150,8 @@ export function ComponentRenderer({
         const defaultHeroData: HeroData = {
           title: "Welcome to Our Amazing Platform",
           subtitle: "Build Something Great",
-          description: "Create beautiful, responsive websites with our intuitive drag-and-drop builder. No coding required.",
+          description:
+            "Create beautiful, responsive websites with our intuitive drag-and-drop builder. No coding required.",
           layout: "center",
           backgroundType: "gradient",
           backgroundColor: "hsl(var(--primary))",
@@ -130,11 +160,11 @@ export function ComponentRenderer({
           textColor: "hsl(var(--primary-foreground))",
           buttons: [
             { id: "1", text: "Get Started", variant: "primary", href: "#" },
-            { id: "2", text: "Learn More", variant: "outline", href: "#" }
+            { id: "2", text: "Learn More", variant: "outline", href: "#" },
           ],
           showImage: false,
           imageUrl: "",
-          imageAlt: "Hero image"
+          imageAlt: "Hero image",
         };
 
         return (

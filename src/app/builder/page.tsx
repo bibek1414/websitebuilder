@@ -33,6 +33,9 @@ interface SiteData {
   };
 }
 
+// Add a type for component updates
+type ComponentUpdate = Partial<Component>;
+
 const componentTemplates = [
   {
     type: "hero",
@@ -158,7 +161,10 @@ function BuilderContent() {
     }
   };
 
-  const updateComponent = (componentId: string, newContent: any) => {
+  const updateComponent = (
+    componentId: string,
+    newContent: ComponentUpdate
+  ) => {
     const updatedSiteData = { ...siteData };
     if (updatedSiteData.pages[currentPage]) {
       const componentIndex = updatedSiteData.pages[
