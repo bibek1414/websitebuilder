@@ -1,6 +1,13 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 export interface NavLink {
   id: string;
@@ -11,7 +18,7 @@ export interface NavLink {
 interface NavigationLinksProps {
   links: NavLink[];
   isEditable?: boolean;
-  onAddLink?: () => void;
+  onAddLink?: (text: string, href?: string) => void;
   onUpdateLink?: (linkId: string, newText: string, newHref?: string) => void;
   onRemoveLink?: (linkId: string) => void;
 }
@@ -23,13 +30,54 @@ export function NavigationLinks({
   onUpdateLink,
   onRemoveLink,
 }: NavigationLinksProps) {
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editingHrefId, setEditingHrefId] = useState<string | null>(null);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editingLink, setEditingLink] = useState<NavLink | null>(null);
 
-  const handleSave = (linkId: string, text: string, href: string) => {
-    onUpdateLink?.(linkId, text, href);
-    setEditingId(null);
-    setEditingHrefId(null);
+  // Add dialog form state
+  const [newLinkText, setNewLinkText] = useState("");
+  const [newLinkHref, setNewLinkHref] = useState("");
+
+  // Edit dialog form state
+  const [editLinkText, setEditLinkText] = useState("");
+  const [editLinkHref, setEditLinkHref] = useState("");
+
+  const handleAddLink = () => {
+    if (newLinkText.trim()) {
+      onAddLink?.(newLinkText.trim(), newLinkHref.trim() || undefined);
+      resetAddDialog();
+    }
+  };
+
+  const handleEditLink = () => {
+    if (editingLink && editLinkText.trim()) {
+      onUpdateLink?.(
+        editingLink.id,
+        editLinkText.trim(),
+        editLinkHref.trim() || undefined
+      );
+      resetEditDialog();
+    }
+  };
+
+  const resetAddDialog = () => {
+    setNewLinkText("");
+    setNewLinkHref("");
+    setIsAddDialogOpen(false);
+  };
+
+  const resetEditDialog = () => {
+    setEditLinkText("");
+    setEditLinkHref("");
+    setEditingLink(null);
+    setIsEditDialogOpen(false);
+  };
+
+  const openEditDialog = (link: NavLink) => {
+    setEditingLink(link);
+    setEditLinkText(link.text);
+    setEditLinkHref(link.href || "");
+    setIsEditDialogOpen(true);
   };
 
   if (isEditable) {
@@ -37,63 +85,12 @@ export function NavigationLinks({
       <div className="flex items-center space-x-6">
         {links.map((link) => (
           <div key={link.id} className="relative group">
-            {editingId === link.id ? (
-              <div className="flex flex-col space-y-1">
-                <Input
-                  type="text"
-                  defaultValue={link.text}
-                  onBlur={(e) =>
-                    handleSave(link.id, e.target.value, link.href || "#")
-                  }
-                  onKeyPress={(e) => {
-                    if (e.key === "Enter") {
-                      handleSave(
-                        link.id,
-                        e.currentTarget.value,
-                        link.href || "#"
-                      );
-                    }
-                  }}
-                  className="bg-transparent border-b border-primary-foreground text-primary-background outline-none text-sm"
-                  autoFocus
-                  placeholder="Link text"
-                />
-                {editingHrefId === link.id && (
-                  <Input
-                    type="text"
-                    defaultValue={link.href || "#"}
-                    onBlur={(e) =>
-                      handleSave(link.id, link.text, e.target.value)
-                    }
-                    onKeyPress={(e) => {
-                      if (e.key === "Enter") {
-                        handleSave(link.id, link.text, e.currentTarget.value);
-                      }
-                    }}
-                    className="bg-background text-foreground px-2 py-1 rounded text-xs"
-                    placeholder="Link URL"
-                  />
-                )}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setEditingHrefId(editingHrefId === link.id ? null : link.id);
-                  }}
-                  className="text-xs text-primary-foreground hover:text-muted-foreground"
-                >
-                  {editingHrefId === link.id ? "Hide URL" : "Edit URL"}
-                </Button>
-              </div>
-            ) : (
-              <span
-                onClick={() => setEditingId(link.id)}
-                className="text-muted-foreground hover:text-muted-foreground cursor-pointer transition-colors"
-              >
-                {link.text}
-              </span>
-            )}
+            <span
+              onClick={() => openEditDialog(link)}
+              className="text-muted-foreground hover:text-foreground cursor-pointer transition-colors"
+            >
+              {link.text}
+            </span>
             <Button
               variant="destructive"
               size="sm"
@@ -107,14 +104,126 @@ export function NavigationLinks({
             </Button>
           </div>
         ))}
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={onAddLink}
-          className="text-primary-foreground bg-secondary border-primary-foreground hover:bg-secondary/90 hover:text-primary"
+
+        {/* Add Link Dialog */}
+        <Dialog
+          open={isAddDialogOpen}
+          onOpenChange={(open) => {
+            setIsAddDialogOpen(open);
+            if (!open) resetAddDialog();
+          }}
         >
-          + Link
-        </Button>
+          <DialogTrigger asChild>
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-primary-foreground bg-secondary border-primary-foreground hover:bg-secondary/90 hover:text-primary"
+            >
+              + Link
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Add New Navigation Link</DialogTitle>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <label htmlFor="add-link-text" className="text-sm font-medium">
+                  Link Text
+                </label>
+                <Input
+                  id="add-link-text"
+                  value={newLinkText}
+                  onChange={(e) => setNewLinkText(e.target.value)}
+                  placeholder="Enter link text"
+                  className="w-full"
+                />
+              </div>
+
+              <div className="grid gap-2">
+                <label htmlFor="add-link-url" className="text-sm font-medium">
+                  Link URL (Optional)
+                </label>
+                <Input
+                  id="add-link-url"
+                  value={newLinkHref}
+                  onChange={(e) => setNewLinkHref(e.target.value)}
+                  placeholder="https://example.com"
+                  className="w-full"
+                />
+              </div>
+
+              <div className="flex justify-end space-x-2 pt-4">
+                <Button
+                  variant="outline"
+                  onClick={() => setIsAddDialogOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button onClick={handleAddLink} disabled={!newLinkText.trim()}>
+                  Add Link
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Edit Link Dialog */}
+        <Dialog
+          open={isEditDialogOpen}
+          onOpenChange={(open) => {
+            setIsEditDialogOpen(open);
+            if (!open) resetEditDialog();
+          }}
+        >
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Edit Navigation Link</DialogTitle>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <label htmlFor="edit-link-text" className="text-sm font-medium">
+                  Link Text
+                </label>
+                <Input
+                  id="edit-link-text"
+                  value={editLinkText}
+                  onChange={(e) => setEditLinkText(e.target.value)}
+                  placeholder="Enter link text"
+                  className="w-full"
+                />
+              </div>
+
+              <div className="grid gap-2">
+                <label htmlFor="edit-link-url" className="text-sm font-medium">
+                  Link URL (Optional)
+                </label>
+                <Input
+                  id="edit-link-url"
+                  value={editLinkHref}
+                  onChange={(e) => setEditLinkHref(e.target.value)}
+                  placeholder="https://example.com"
+                  className="w-full"
+                />
+              </div>
+
+              <div className="flex justify-end space-x-2 pt-4">
+                <Button
+                  variant="outline"
+                  onClick={() => setIsEditDialogOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleEditLink}
+                  disabled={!editLinkText.trim()}
+                >
+                  Save Changes
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     );
   }
@@ -125,7 +234,14 @@ export function NavigationLinks({
         <a
           key={link.id}
           href={link.href || "#"}
-          className=""
+          className="text-muted-foreground hover:text-foreground transition-colors"
+          onClick={(e) => {
+            // Handle navigation in preview mode
+            if (link.href?.includes("/preview?")) {
+              e.preventDefault();
+              window.location.href = link.href;
+            }
+          }}
         >
           {link.text}
         </a>

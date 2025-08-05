@@ -8,6 +8,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 export interface ActionButton {
   id: string;
@@ -19,7 +26,7 @@ export interface ActionButton {
 interface ActionButtonsProps {
   buttons: ActionButton[];
   isEditable?: boolean;
-  onAddButton?: () => void;
+  onAddButton?: (text: string, variant: string, href?: string) => void;
   onUpdateButton?: (
     buttonId: string,
     newText: string,
@@ -36,8 +43,19 @@ export function ActionButtons({
   onUpdateButton,
   onRemoveButton,
 }: ActionButtonsProps) {
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editingHref, setEditingHref] = useState(false);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editingButton, setEditingButton] = useState<ActionButton | null>(null);
+
+  // Add dialog form state
+  const [newButtonText, setNewButtonText] = useState("");
+  const [newButtonVariant, setNewButtonVariant] = useState("primary");
+  const [newButtonHref, setNewButtonHref] = useState("");
+
+  // Edit dialog form state
+  const [editButtonText, setEditButtonText] = useState("");
+  const [editButtonVariant, setEditButtonVariant] = useState("primary");
+  const [editButtonHref, setEditButtonHref] = useState("");
 
   const getButtonVariant = (
     variant: string
@@ -54,15 +72,50 @@ export function ActionButtons({
     }
   };
 
-  const handleSave = (
-    buttonId: string,
-    text: string,
-    variant: string,
-    href: string
-  ) => {
-    onUpdateButton?.(buttonId, text, variant, href);
-    setEditingId(null);
-    setEditingHref(false);
+  const handleAddButton = () => {
+    if (newButtonText.trim()) {
+      onAddButton?.(
+        newButtonText.trim(),
+        newButtonVariant,
+        newButtonHref.trim() || undefined
+      );
+      resetAddDialog();
+    }
+  };
+
+  const handleEditButton = () => {
+    if (editingButton && editButtonText.trim()) {
+      onUpdateButton?.(
+        editingButton.id,
+        editButtonText.trim(),
+        editButtonVariant,
+        editButtonHref.trim() || undefined
+      );
+      resetEditDialog();
+    }
+  };
+
+  const resetAddDialog = () => {
+    setNewButtonText("");
+    setNewButtonVariant("primary");
+    setNewButtonHref("");
+    setIsAddDialogOpen(false);
+  };
+
+  const resetEditDialog = () => {
+    setEditButtonText("");
+    setEditButtonVariant("primary");
+    setEditButtonHref("");
+    setEditingButton(null);
+    setIsEditDialogOpen(false);
+  };
+
+  const openEditDialog = (button: ActionButton) => {
+    setEditingButton(button);
+    setEditButtonText(button.text);
+    setEditButtonVariant(button.variant);
+    setEditButtonHref(button.href || "");
+    setIsEditDialogOpen(true);
   };
 
   if (isEditable) {
@@ -70,45 +123,77 @@ export function ActionButtons({
       <div className="flex items-center space-x-3">
         {buttons.map((button) => (
           <div key={button.id} className="relative group">
-            {editingId === button.id ? (
-              <div className="flex flex-col space-y-1 min-w-32">
-                <Input
-                  type="text"
-                  defaultValue={button.text}
-                  onBlur={(e) =>
-                    handleSave(
-                      button.id,
-                      e.target.value,
-                      button.variant,
-                      button.href || "#"
-                    )
-                  }
-                  onKeyPress={(e) => {
-                    if (e.key === "Enter") {
-                      handleSave(
-                        button.id,
-                        e.currentTarget.value,
-                        button.variant,
-                        button.href || "#"
-                      );
-                    }
-                  }}
-                  className="text-sm"
-                  autoFocus
-                  placeholder="Button text"
-                />
-                <Select
-                  defaultValue={button.variant}
-                  onValueChange={(value) =>
-                    handleSave(
-                      button.id,
-                      button.text,
-                      value,
-                      button.href || "#"
-                    )
-                  }
+            <Button
+              variant={getButtonVariant(button.variant)}
+              onClick={() => openEditDialog(button)}
+              className="font-medium cursor-pointer"
+            >
+              {button.text}
+            </Button>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                onRemoveButton?.(button.id);
+              }}
+              className="absolute -top-2 -right-2 rounded-full w-4 h-4 text-xs opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center p-0 min-w-0"
+            >
+              ×
+            </Button>
+          </div>
+        ))}
+
+        {/* Add Button Dialog */}
+        <Dialog
+          open={isAddDialogOpen}
+          onOpenChange={(open) => {
+            setIsAddDialogOpen(open);
+            if (!open) resetAddDialog();
+          }}
+        >
+          <DialogTrigger asChild>
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-primary-foreground bg-secondary border-primary-foreground hover:bg-secondary/90 hover:text-primary"
+            >
+              + Button
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Add New Action Button</DialogTitle>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <label
+                  htmlFor="add-button-text"
+                  className="text-sm font-medium"
                 >
-                  <SelectTrigger className="text-xs">
+                  Button Text
+                </label>
+                <Input
+                  id="add-button-text"
+                  value={newButtonText}
+                  onChange={(e) => setNewButtonText(e.target.value)}
+                  placeholder="Enter button text"
+                  className="w-full"
+                />
+              </div>
+
+              <div className="grid gap-2">
+                <label
+                  htmlFor="add-button-variant"
+                  className="text-sm font-medium"
+                >
+                  Button Style
+                </label>
+                <Select
+                  value={newButtonVariant}
+                  onValueChange={setNewButtonVariant}
+                >
+                  <SelectTrigger className="w-full">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -117,68 +202,123 @@ export function ActionButtons({
                     <SelectItem value="outline">Outline</SelectItem>
                   </SelectContent>
                 </Select>
-                {editingHref && (
-                  <Input
-                    type="text"
-                    defaultValue={button.href || "#"}
-                    onBlur={(e) =>
-                      handleSave(
-                        button.id,
-                        button.text,
-                        button.variant,
-                        e.target.value
-                      )
-                    }
-                    onKeyPress={(e) => {
-                      if (e.key === "Enter") {
-                        handleSave(
-                          button.id,
-                          button.text,
-                          button.variant,
-                          e.currentTarget.value
-                        );
-                      }
-                    }}
-                    className="text-xs"
-                    placeholder="Button URL"
-                  />
-                )}
+              </div>
+
+              <div className="grid gap-2">
+                <label htmlFor="add-button-url" className="text-sm font-medium">
+                  Button URL (Optional)
+                </label>
+                <Input
+                  id="add-button-url"
+                  value={newButtonHref}
+                  onChange={(e) => setNewButtonHref(e.target.value)}
+                  placeholder="https://example.com"
+                  className="w-full"
+                />
+              </div>
+
+              <div className="flex justify-end space-x-2 pt-4">
                 <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setEditingHref(!editingHref)}
-                  className="text-xs text-primary-foreground hover:text-muted-foreground"
+                  variant="outline"
+                  onClick={() => setIsAddDialogOpen(false)}
                 >
-                  {editingHref ? "Hide URL" : "Edit URL"}
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleAddButton}
+                  disabled={!newButtonText.trim()}
+                >
+                  Add Button
                 </Button>
               </div>
-            ) : (
-              <Button
-                variant={getButtonVariant(button.variant)}
-                onClick={() => setEditingId(button.id)}
-                className="font-medium"
-              >
-                {button.text}
-              </Button>
-            )}
-            <Button
-              variant="destructive"
-              size="sm"
-              onClick={() => onRemoveButton?.(button.id)}
-              className="absolute -top-2 -right-2 rounded-full w-4 h-4 text-xs opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center p-0 min-w-0"
-            >
-              ×
-            </Button>
-          </div>
-        ))}
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={onAddButton}
-          className="text-primary-foreground bg-secondary border-primary-foreground hover:bg-secondary/90 hover:text-primary"
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Edit Button Dialog */}
+        <Dialog
+          open={isEditDialogOpen}
+          onOpenChange={(open) => {
+            setIsEditDialogOpen(open);
+            if (!open) resetEditDialog();
+          }}
         >
-          + Button
-        </Button>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Edit Action Button</DialogTitle>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <label
+                  htmlFor="edit-button-text"
+                  className="text-sm font-medium"
+                >
+                  Button Text
+                </label>
+                <Input
+                  id="edit-button-text"
+                  value={editButtonText}
+                  onChange={(e) => setEditButtonText(e.target.value)}
+                  placeholder="Enter button text"
+                  className="w-full"
+                />
+              </div>
+
+              <div className="grid gap-2">
+                <label
+                  htmlFor="edit-button-variant"
+                  className="text-sm font-medium"
+                >
+                  Button Style
+                </label>
+                <Select
+                  value={editButtonVariant}
+                  onValueChange={setEditButtonVariant}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="primary">Primary</SelectItem>
+                    <SelectItem value="secondary">Secondary</SelectItem>
+                    <SelectItem value="outline">Outline</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="grid gap-2">
+                <label
+                  htmlFor="edit-button-url"
+                  className="text-sm font-medium"
+                >
+                  Button URL (Optional)
+                </label>
+                <Input
+                  id="edit-button-url"
+                  value={editButtonHref}
+                  onChange={(e) => setEditButtonHref(e.target.value)}
+                  placeholder="https://example.com"
+                  className="w-full"
+                />
+              </div>
+
+              <div className="flex justify-end space-x-2 pt-4">
+                <Button
+                  variant="outline"
+                  onClick={() => setIsEditDialogOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleEditButton}
+                  disabled={!editButtonText.trim()}
+                >
+                  Save Changes
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     );
   }

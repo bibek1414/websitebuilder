@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { ComponentRenderer, Component } from "@/components/component-renders";
 import { HeroData } from "@/components/hero/hero";
 import { Button } from "@/components/ui/button";
@@ -27,13 +27,15 @@ interface ThemeSettings extends ThemeColors {
   fontFamily: string;
 }
 
+interface PageData {
+  components: Component[];
+}
+
 interface SiteData {
   pages: {
-    [key: string]: {
-      components: Component[];
-    };
+    [key: string]: PageData;
   };
-  theme?: ThemeSettings; // Updated to use ThemeSettings instead of ThemeColors
+  theme?: ThemeSettings;
 }
 
 // Define the shape of raw component data from localStorage
@@ -174,9 +176,86 @@ function normalizeComponent(component: RawComponentData): Component {
   return normalized;
 }
 
+// Function to convert page name to URL-friendly slug
+const pageNameToSlug = (pageName: string): string => {
+  return pageName
+    .toLowerCase()
+    .replace(/\s+/g, "-")
+    .replace(/[^a-z0-9-]/g, "");
+};
+
+// Function to convert URL slug back to page name
+const slugToPageName = (
+  slug: string,
+  pages: { [key: string]: PageData }
+): string => {
+  // First try exact match
+  if (pages[slug]) return slug;
+
+  // Then try to find by converted slug
+  const pageEntries = Object.keys(pages);
+  const foundPage = pageEntries.find(
+    (pageName) => pageNameToSlug(pageName) === slug
+  );
+
+  return foundPage || "home";
+};
+
+// Enhanced ComponentRenderer that updates navbar links
+interface EnhancedComponentRendererProps {
+  component: Component;
+  siteId: string;
+  currentPage: string;
+  pages: { [key: string]: PageData };
+}
+
+function EnhancedComponentRenderer({
+  component,
+  siteId,
+  currentPage,
+  pages,
+}: EnhancedComponentRendererProps) {
+  // Clone the component and update navbar links if it's a navbar
+  const enhancedComponent = { ...component };
+
+  if (component.type === "navbar" && component.navbarData?.links) {
+    const updatedLinks = component.navbarData.links.map((link) => {
+      // Check if this link corresponds to a page
+      const linkText = link.text.toLowerCase();
+      const matchingPage = Object.keys(pages).find(
+        (pageName) =>
+          pageName.toLowerCase() === linkText ||
+          pageNameToSlug(pageName) === pageNameToSlug(linkText)
+      );
+
+      if (matchingPage) {
+        // Update href to use proper navigation
+        const slug = pageNameToSlug(matchingPage);
+        return {
+          ...link,
+          href: `/preview?site=${siteId}&page=${slug}`,
+        };
+      }
+
+      return link;
+    });
+
+    enhancedComponent.navbarData = {
+      ...component.navbarData,
+      links: updatedLinks,
+    };
+  }
+
+  return <ComponentRenderer component={enhancedComponent} isPreview={true} />;
+}
+
 function PreviewContent() {
   const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+
   const siteId = searchParams.get("site");
+  const pageParam = searchParams.get("page");
 
   const [siteData, setSiteData] = useState<SiteData>({ pages: {} });
   const [currentPage, setCurrentPage] = useState("home");
@@ -218,7 +297,11 @@ function PreviewContent() {
             loadGoogleFonts();
           }
 
-          if (
+          // Set current page based on URL parameter
+          if (pageParam) {
+            const targetPage = slugToPageName(pageParam, normalizedData.pages);
+            setCurrentPage(targetPage);
+          } else if (
             !normalizedData.pages.home &&
             Object.keys(normalizedData.pages).length > 0
           ) {
@@ -235,7 +318,15 @@ function PreviewContent() {
       }
       setIsLoading(false);
     }
-  }, [siteId]);
+  }, [siteId, pageParam]);
+
+  // Handle navigation when page parameter changes
+  useEffect(() => {
+    if (pageParam && siteData.pages) {
+      const targetPage = slugToPageName(pageParam, siteData.pages);
+      setCurrentPage(targetPage);
+    }
+  }, [pageParam, siteData.pages]);
 
   if (isLoading) {
     return (
@@ -261,30 +352,8 @@ function PreviewContent() {
     );
   }
 
-  const pageKeys = Object.keys(siteData.pages);
-  const hasMultiplePages = pageKeys.length > 1;
-
   return (
     <div className="min-h-screen bg-background">
-      {hasMultiplePages && (
-        <nav className="bg-primary text-primary-foreground sticky top-0 z-20 shadow">
-          <div className="container mx-auto px-4">
-            <div className="flex space-x-1 py-2">
-              {pageKeys.map((pageName) => (
-                <Button
-                  key={pageName}
-                  variant={currentPage === pageName ? "secondary" : "ghost"}
-                  onClick={() => setCurrentPage(pageName)}
-                  className="capitalize"
-                >
-                  {pageName}
-                </Button>
-              ))}
-            </div>
-          </div>
-        </nav>
-      )}
-
       <main>
         {siteData.pages[currentPage]?.components.length === 0 ? (
           <div className="flex items-center justify-center h-96">
@@ -300,10 +369,12 @@ function PreviewContent() {
           </div>
         ) : (
           siteData.pages[currentPage]?.components.map((component) => (
-            <ComponentRenderer
+            <EnhancedComponentRenderer
               key={component.id}
               component={component}
-              isPreview={true}
+              siteId={siteId!}
+              currentPage={currentPage}
+              pages={siteData.pages}
             />
           ))
         )}
