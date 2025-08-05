@@ -61,11 +61,11 @@ export function Navbar1({
     });
   };
 
-  const handleAddLink = () => {
-    const newLink = { id: Date.now().toString(), text: "New Link", href: "#" };
+  const handleAddLink = (text: string, href?: string) => {
+    const newLink: NavLink = { id: Date.now().toString(), text, href };
     const updatedLinks = [...currentLinks, newLink];
     setCurrentLinks(updatedLinks);
-    updateComponent({ links: updatedLinks, buttons: currentButtons });
+    updateComponent({ links: updatedLinks });
   };
 
   const handleUpdateLink = (
@@ -86,16 +86,16 @@ export function Navbar1({
     updateComponent({ links: updatedLinks, buttons: currentButtons });
   };
 
-  const handleAddButton = () => {
-    const newButton = {
+  const handleAddButton = (text: string, variant: string, href?: string) => {
+    const newButton: ActionButton = {
       id: Date.now().toString(),
-      text: "Button",
-      variant: "primary" as const,
-      href: "#",
+      text,
+      variant: variant as ActionButton["variant"],
+      href,
     };
     const updatedButtons = [...currentButtons, newButton];
     setCurrentButtons(updatedButtons);
-    updateComponent({ links: currentLinks, buttons: updatedButtons });
+    updateComponent({ buttons: updatedButtons });
   };
 
   const handleUpdateButton = (
