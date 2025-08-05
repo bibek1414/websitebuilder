@@ -157,7 +157,7 @@ export const NavbarStylesSection = ({
           className="cursor-pointer"
         >
           <DraggableNavbarPreview id="navbar-style-3" styleName="style-3">
-            <div className="p-4 border rounded-md bg-slate-900 text-white w-80">
+            <div className="p-4 border rounded-md bg-primary text-white w-80">
               <div className="flex flex-col space-y-2">
                 <div className="flex justify-between items-center">
                   <div className="font-bold text-xs">Brand</div>

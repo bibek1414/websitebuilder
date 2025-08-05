@@ -13,6 +13,7 @@ import {
   Trash2,
   Palette,
   LayoutTemplate,
+  Settings,
 } from "lucide-react";
 import { DndContext, closestCenter, DragEndEvent } from "@dnd-kit/core";
 import {
@@ -24,6 +25,35 @@ import {
   NavbarStylesSection,
   DroppableEditorZone,
 } from "@/components/navbar-selection-modal";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import ColorPicker from "@/components/color-picker";
+
+interface ThemeColors {
+  primary: string;
+  primaryForeground: string;
+  secondary: string;
+  secondaryForeground: string;
+  accent: string;
+  accentForeground: string;
+  background: string;
+  foreground: string;
+  card: string;
+  cardForeground: string;
+  border: string;
+  muted: string;
+  mutedForeground: string;
+}
+
+interface ThemeSettings extends ThemeColors {
+  fontFamily: string;
+}
 
 interface SiteData {
   pages: {
@@ -31,6 +61,7 @@ interface SiteData {
       components: Component[];
     };
   };
+  theme?: ThemeSettings;
 }
 
 // Add a type for component updates
@@ -46,6 +77,86 @@ const componentTemplates = [
   { type: "text", name: "Text Block", description: "A simple text block" },
 ];
 
+// Available fonts for fallback reference
+const availableFonts = [
+  {
+    name: "Inter",
+    value: "Inter",
+    fallback: "system-ui, -apple-system, sans-serif",
+  },
+  {
+    name: "Roboto",
+    value: "Roboto",
+    fallback: "system-ui, -apple-system, sans-serif",
+  },
+  {
+    name: "Playfair Display",
+    value: "Playfair Display",
+    fallback: "Georgia, serif",
+  },
+  {
+    name: "Poppins",
+    value: "Poppins",
+    fallback: "system-ui, -apple-system, sans-serif",
+  },
+];
+
+// Function to load Google Fonts
+const loadGoogleFonts = () => {
+  if (typeof window === "undefined") return;
+
+  const existingLink = document.querySelector(
+    'link[data-font-loader="google-fonts"]'
+  );
+  if (existingLink) return;
+
+  const link = document.createElement("link");
+  link.href =
+    "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto:wght@400;500;700&family=Playfair+Display:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap";
+  link.rel = "stylesheet";
+  link.setAttribute("data-font-loader", "google-fonts");
+
+  link.onload = () => {
+    console.log("Google Fonts loaded successfully");
+  };
+
+  link.onerror = () => {
+    console.warn("Failed to load Google Fonts, using fallback fonts");
+  };
+
+  document.head.appendChild(link);
+};
+
+// Function to apply theme settings (colors and fonts)
+const applyThemeSettings = (settings: ThemeSettings) => {
+  if (typeof window === "undefined") return;
+
+  const root = document.documentElement;
+
+  // Apply colors
+  Object.entries(settings).forEach(([key, value]) => {
+    if (key !== "fontFamily") {
+      const cssVar = `--${key.replace(/([A-Z])/g, "-$1").toLowerCase()}`;
+      root.style.setProperty(cssVar, value);
+    }
+  });
+
+  // Apply font
+  if (settings.fontFamily) {
+    // Ensure Google Fonts are loaded
+    loadGoogleFonts();
+
+    const selectedFontObj = availableFonts.find(
+      (f) => f.value === settings.fontFamily
+    );
+    if (selectedFontObj) {
+      const fontFamily = `"${selectedFontObj.value}", ${selectedFontObj.fallback}`;
+      root.style.setProperty("--font-family", fontFamily);
+      document.body.style.fontFamily = fontFamily;
+    }
+  }
+};
+
 function BuilderContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -57,6 +168,7 @@ function BuilderContent() {
   });
   const [currentPage, setCurrentPage] = useState("home");
   const [isLoading, setIsLoading] = useState(true);
+  const [showColorPicker, setShowColorPicker] = useState(false);
 
   useEffect(() => {
     if (siteId && typeof window !== "undefined") {
@@ -68,12 +180,22 @@ function BuilderContent() {
             parsedData.pages = { home: { components: [] } };
           }
           setSiteData(parsedData);
+
+          // Apply saved theme settings (including font) if they exist
+          if (parsedData.theme) {
+            applyThemeSettings(parsedData.theme);
+          } else {
+            // Load Google Fonts even if no custom theme is set
+            loadGoogleFonts();
+          }
         } catch (error) {
           console.error("Error parsing site data:", error);
           setSiteData({ pages: { home: { components: [] } } });
+          loadGoogleFonts();
         }
       } else {
         setSiteData({ pages: { home: { components: [] } } });
+        loadGoogleFonts();
       }
       setIsLoading(false);
     }
@@ -84,6 +206,12 @@ function BuilderContent() {
     if (siteId && typeof window !== "undefined") {
       localStorage.setItem(`site_${siteId}`, JSON.stringify(newSiteData));
     }
+  };
+
+  const handleThemeSettingsChange = (settings: ThemeSettings) => {
+    const updatedSiteData = { ...siteData, theme: settings };
+    saveSite(updatedSiteData);
+    applyThemeSettings(settings);
   };
 
   const addComponent = (type: string, style?: string) => {
@@ -132,7 +260,7 @@ function BuilderContent() {
         imageAlt: "Hero image",
       };
       newComponent.heroData = defaultHeroData;
-      newComponent.content = ""; // Hero doesn't use the content field
+      newComponent.content = "";
     }
 
     const updatedSiteData = { ...siteData };
@@ -272,7 +400,7 @@ function BuilderContent() {
     <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
       <div className="flex h-screen bg-background text-foreground">
         {/* Sidebar - Increased width */}
-        <div className="w-80 bg-card shadow-lg flex flex-col border-r">
+        <div className="w-90 bg-card shadow-lg flex flex-col border-r">
           <div className="p-4 border-b">
             <h2 className="text-lg font-bold truncate">
               Editing: {siteName || "Untitled"}
@@ -296,6 +424,34 @@ function BuilderContent() {
                 <Eye className="h-3 w-3 mr-1" />
                 Preview
               </Button>
+              <Dialog open={showColorPicker} onOpenChange={setShowColorPicker}>
+                <DialogTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="p-0 h-auto text-primary hover:text-primary/80"
+                  >
+                    <Palette className="h-3 w-3 mr-1" />
+                    Theme
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle>
+                      Customize Theme Colors & Typography
+                    </DialogTitle>
+                    <DialogDescription>
+                      Choose colors and fonts that match your brand and create a
+                      cohesive look across your website.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <ColorPicker
+                    onColorsChange={handleThemeSettingsChange}
+                    initialColors={siteData.theme}
+                    initialFont={siteData.theme?.fontFamily || "Inter"}
+                  />
+                </DialogContent>
+              </Dialog>
             </div>
           </div>
 
@@ -365,9 +521,22 @@ function BuilderContent() {
         <div className="flex-1 flex flex-col">
           <div className="bg-card border-b p-4 flex items-center justify-between">
             <h2 className="text-xl font-bold capitalize">{currentPage} Page</h2>
-            <Badge variant="secondary">
-              {currentComponents.length || 0} components
-            </Badge>
+            <div className="flex items-center gap-2">
+              <Badge variant="secondary">
+                {currentComponents.length || 0} components
+              </Badge>
+              {siteData.theme && (
+                <Badge variant="outline" className="text-xs">
+                  <Palette className="h-3 w-3 mr-1" />
+                  Custom Theme
+                </Badge>
+              )}
+              {siteData.theme?.fontFamily && (
+                <Badge variant="outline" className="text-xs">
+                  Font: {siteData.theme.fontFamily}
+                </Badge>
+              )}
+            </div>
           </div>
 
           <DroppableEditorZone>

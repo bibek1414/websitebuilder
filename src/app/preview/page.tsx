@@ -7,12 +7,33 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { AlertCircle, FileX } from "lucide-react";
 
+interface ThemeColors {
+  primary: string;
+  primaryForeground: string;
+  secondary: string;
+  secondaryForeground: string;
+  accent: string;
+  accentForeground: string;
+  background: string;
+  foreground: string;
+  card: string;
+  cardForeground: string;
+  border: string;
+  muted: string;
+  mutedForeground: string;
+}
+
+interface ThemeSettings extends ThemeColors {
+  fontFamily: string;
+}
+
 interface SiteData {
   pages: {
     [key: string]: {
       components: Component[];
     };
   };
+  theme?: ThemeSettings; // Updated to use ThemeSettings instead of ThemeColors
 }
 
 // Define the shape of raw component data from localStorage
@@ -33,6 +54,88 @@ interface RawComponentData {
   };
   heroData?: HeroData;
 }
+
+// Available fonts for fallback reference
+const availableFonts = [
+  {
+    name: "Inter",
+    value: "Inter",
+    fallback: "system-ui, -apple-system, sans-serif",
+  },
+  {
+    name: "Roboto",
+    value: "Roboto",
+    fallback: "system-ui, -apple-system, sans-serif",
+  },
+  {
+    name: "Playfair Display",
+    value: "Playfair Display",
+    fallback: "Georgia, serif",
+  },
+  {
+    name: "Poppins",
+    value: "Poppins",
+    fallback: "system-ui, -apple-system, sans-serif",
+  },
+];
+
+// Function to load Google Fonts
+const loadGoogleFonts = () => {
+  if (typeof window === "undefined") return;
+
+  const existingLink = document.querySelector(
+    'link[data-font-loader="google-fonts"]'
+  );
+  if (existingLink) return;
+
+  const link = document.createElement("link");
+  link.href =
+    "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto:wght@400;500;700&family=Playfair+Display:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap";
+  link.rel = "stylesheet";
+  link.setAttribute("data-font-loader", "google-fonts");
+
+  link.onload = () => {
+    console.log("Google Fonts loaded successfully in preview");
+  };
+
+  link.onerror = () => {
+    console.warn(
+      "Failed to load Google Fonts in preview, using fallback fonts"
+    );
+  };
+
+  document.head.appendChild(link);
+};
+
+// Function to apply theme settings (colors and fonts)
+const applyThemeSettings = (settings: ThemeSettings) => {
+  if (typeof window === "undefined") return;
+
+  const root = document.documentElement;
+
+  // Apply colors
+  Object.entries(settings).forEach(([key, value]) => {
+    if (key !== "fontFamily") {
+      const cssVar = `--${key.replace(/([A-Z])/g, "-$1").toLowerCase()}`;
+      root.style.setProperty(cssVar, value);
+    }
+  });
+
+  // Apply font
+  if (settings.fontFamily) {
+    // Ensure Google Fonts are loaded
+    loadGoogleFonts();
+
+    const selectedFontObj = availableFonts.find(
+      (f) => f.value === settings.fontFamily
+    );
+    if (selectedFontObj) {
+      const fontFamily = `"${selectedFontObj.value}", ${selectedFontObj.fallback}`;
+      root.style.setProperty("--font-family", fontFamily);
+      document.body.style.fontFamily = fontFamily;
+    }
+  }
+};
 
 function normalizeComponent(component: RawComponentData): Component {
   const normalized: Component = {
@@ -84,9 +187,13 @@ function PreviewContent() {
       const savedSite = localStorage.getItem(`site_${siteId}`);
       if (savedSite) {
         try {
-          const parsedData = JSON.parse(savedSite) as { pages?: { [key: string]: { components?: RawComponentData[] } } };
+          const parsedData = JSON.parse(savedSite) as {
+            pages?: { [key: string]: { components?: RawComponentData[] } };
+            theme?: ThemeSettings;
+          };
           const normalizedData: SiteData = { pages: {} };
 
+          // Process pages
           Object.keys(parsedData.pages || {}).forEach((pageName) => {
             const page = parsedData.pages?.[pageName];
             if (page && Array.isArray(page.components)) {
@@ -95,7 +202,22 @@ function PreviewContent() {
               };
             }
           });
+
+          // Include theme data
+          if (parsedData.theme) {
+            normalizedData.theme = parsedData.theme;
+          }
+
           setSiteData(normalizedData);
+
+          // Apply theme settings (colors and fonts) if they exist
+          if (parsedData.theme) {
+            applyThemeSettings(parsedData.theme);
+          } else {
+            // Load Google Fonts even if no custom theme is set
+            loadGoogleFonts();
+          }
+
           if (
             !normalizedData.pages.home &&
             Object.keys(normalizedData.pages).length > 0
@@ -104,7 +226,12 @@ function PreviewContent() {
           }
         } catch (error) {
           console.error("Error parsing site data:", error);
+          // Load Google Fonts even on error
+          loadGoogleFonts();
         }
+      } else {
+        // Load Google Fonts even if no saved site
+        loadGoogleFonts();
       }
       setIsLoading(false);
     }
