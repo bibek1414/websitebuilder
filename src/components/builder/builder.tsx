@@ -3,6 +3,7 @@ import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ComponentRenderer, Component } from "@/components/component-renders";
 import { HeroData } from "@/components/hero/hero";
+import { FooterData } from "@/types/footer";
 import { Badge } from "@/components/ui/badge";
 import { LayoutTemplate, Palette } from "lucide-react";
 import { DndContext, closestCenter, DragEndEvent } from "@dnd-kit/core";
@@ -13,6 +14,9 @@ import {
 } from "@dnd-kit/sortable";
 import { BuilderSidebar } from "./builder-sidebar";
 import { DroppableEditorZone } from "./droppable-editor-zone";
+import { Facebook, Twitter } from "lucide-react";
+
+
 
 interface ThemeColors {
   primary: string;
@@ -136,6 +140,11 @@ function BuilderContent() {
       (component) => component.type === "navbar"
     ) || false;
 
+  const hasFooter =
+    siteData.pages[currentPage]?.components.some(
+      (component) => component.type === "footer"
+    ) || false;
+
   useEffect(() => {
     if (siteId && typeof window !== "undefined") {
       const savedSite = localStorage.getItem(`site_${siteId}`);
@@ -224,6 +233,50 @@ function BuilderContent() {
       };
       newComponent.heroData = defaultHeroData;
       newComponent.content = "";
+    } else if (type === "footer") {
+      const defaultFooterData: FooterData = {
+        companyName: "Your Company",
+        description: "Building amazing experiences for our customers with innovative solutions and exceptional service.",
+        sections: [
+          {
+            id: "1",
+            title: "Company",
+            links: [
+              { id: "1", text: "About Us", href: "#about" },
+              { id: "2", text: "Our Team", href: "#team" },
+              { id: "3", text: "Careers", href: "#careers" },
+              { id: "4", text: "Contact", href: "#contact" }
+            ]
+          },
+          {
+            id: "2",
+            title: "Services",
+            links: [
+              { id: "1", text: "Web Design", href: "#web-design" },
+              { id: "2", text: "Development", href: "#development" },
+              { id: "3", text: "Consulting", href: "#consulting" },
+              { id: "4", text: "Support", href: "#support" }
+            ]
+          }
+        ],
+        socialLinks: [
+          { id: "1", platform: "Facebook", href: "#", icon: Facebook },
+          { id: "2", platform: "Twitter", href: "#", icon:Twitter },]
+        ,
+        contactInfo: {
+          email: "hello@company.com",
+          phone: "+1 (555) 123-4567",
+          address: "123 Business St, City, State 12345"
+        },
+        newsletter: {
+          enabled: true,
+          title: "Stay Updated",
+          description: "Subscribe to our newsletter for the latest updates and news."
+        },
+        copyright: "© 2024 Your Company. All rights reserved."
+      };
+      newComponent.footerData = defaultFooterData;
+      newComponent.content = "";
     }
 
     const updatedSiteData = { ...siteData };
@@ -240,6 +293,10 @@ function BuilderContent() {
 
   const handleNavbarStyleSelect = (style: string) => {
     addComponent("navbar", style);
+  };
+
+  const handleFooterStyleSelect = (style: string) => {
+    addComponent("footer", style);
   };
 
   const removeComponent = (componentId: string) => {
@@ -283,6 +340,14 @@ function BuilderContent() {
       over.id === "editor-drop-zone"
     ) {
       addComponent("navbar", active.data.current.style);
+      return;
+    }
+
+    if (
+      active.data.current?.type === "footer" &&
+      over.id === "editor-drop-zone"
+    ) {
+      addComponent("footer", active.data.current.style);
       return;
     }
 
@@ -365,12 +430,14 @@ function BuilderContent() {
           currentPage={currentPage}
           theme={siteData.theme}
           hasNavbar={hasNavbar}
+          hasFooter={hasFooter}
           onBackToDashboard={() => router.push("/")}
           onPreviewSite={previewSite}
           onPageChange={setCurrentPage}
           onPageAdd={addPage}
           onPageDelete={deletePage}
           onNavbarStyleSelect={handleNavbarStyleSelect}
+          onFooterStyleSelect={handleFooterStyleSelect}
           onComponentClick={handleComponentClick}
           onThemeChange={handleThemeSettingsChange}
         />

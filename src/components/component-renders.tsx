@@ -9,7 +9,9 @@ import { Navbar1 } from "./navbar/navbar-1";
 import { Navbar2 } from "./navbar/navbar-2";
 import { Navbar3 } from "./navbar/navbar-3";
 import { Hero, HeroData } from "./hero/hero";
-
+import { Footer  } from "./footer/footer";
+import {FooterData} from "@/types/footer";
+import { Facebook, Twitter } from "lucide-react";
 export interface Component {
   id: string;
   type: string;
@@ -26,6 +28,7 @@ export interface Component {
     }>;
   };
   heroData?: HeroData;
+  footerData?: FooterData;
 }
 
 interface NavbarUpdateData {
@@ -45,11 +48,15 @@ interface HeroUpdateData {
   heroData: HeroData;
 }
 
+interface FooterUpdateData {
+  footerData: FooterData;
+}
+
 interface TextUpdateData {
   content: string;
 }
 
-type ComponentUpdateData = NavbarUpdateData | HeroUpdateData | TextUpdateData;
+type ComponentUpdateData = NavbarUpdateData | HeroUpdateData | FooterUpdateData | TextUpdateData;
 
 interface ComponentRendererProps {
   component: Component;
@@ -121,6 +128,13 @@ export function ComponentRenderer({
     onUpdate?.(componentId, newHeroData);
   };
 
+  const handleFooterUpdate = (
+    componentId: string,
+    newFooterData: FooterUpdateData
+  ) => {
+    onUpdate?.(componentId, newFooterData);
+  };
+
   const handleRemove = () => {
     onRemove?.(component.id);
   };
@@ -154,10 +168,10 @@ export function ComponentRenderer({
             "Create beautiful, responsive websites with our intuitive drag-and-drop builder. No coding required.",
           layout: "center",
           backgroundType: "gradient",
-          backgroundColor: "hsl(var(--primary))",
-          gradientFrom: "hsl(var(--primary))",
-          gradientTo: "hsl(var(--secondary))",
-          textColor: "hsl(var(--primary-foreground))",
+          backgroundColor: "primary",
+          gradientFrom: "primary",
+          gradientTo: "secondary",
+          textColor: "primary-foreground",
           buttons: [
             { id: "1", text: "Get Started", variant: "primary", href: "#" },
             { id: "2", text: "Learn More", variant: "outline", href: "#" },
@@ -172,6 +186,59 @@ export function ComponentRenderer({
             heroData={component.heroData || defaultHeroData}
             isEditable={!isPreview}
             onUpdate={handleHeroUpdate}
+            componentId={component.id}
+          />
+        );
+
+      case "footer":
+        const defaultFooterData: FooterData = {
+          companyName: "Your Company",
+          description: "Building amazing experiences for our customers with innovative solutions and exceptional service.",
+          sections: [
+            {
+              id: "1",
+              title: "Company",
+              links: [
+                { id: "1", text: "About Us", href: "#about" },
+                { id: "2", text: "Our Team", href: "#team" },
+                { id: "3", text: "Careers", href: "#careers" },
+                { id: "4", text: "Contact", href: "#contact" }
+              ]
+            },
+            {
+              id: "2",
+              title: "Services",
+              links: [
+                { id: "1", text: "Web Design", href: "#web-design" },
+                { id: "2", text: "Development", href: "#development" },
+                { id: "3", text: "Consulting", href: "#consulting" },
+                { id: "4", text: "Support", href: "#support" }
+              ]
+            }
+          ],
+          socialLinks: [
+            { id: "1", platform: "Facebook", href: "#", icon: Facebook },
+            { id: "2", platform: "Twitter", href: "#", icon: Twitter },
+          ],
+          contactInfo: {
+            email: "hello@company.com",
+            phone: "+1 (555) 123-4567",
+            address: "123 Business St, City, State 12345"
+          },
+          newsletter: {
+            enabled: true,
+            title: "Stay Updated",
+            description: "Subscribe to our newsletter for the latest updates and news."
+          },
+          copyright: "© 2024 Your Company. All rights reserved."
+        };
+
+        return (
+          <Footer
+            footerData={component.footerData || defaultFooterData}
+            style={component.style as "style-1" | "style-2"}
+            isEditable={!isPreview}
+            onUpdate={handleFooterUpdate}
             componentId={component.id}
           />
         );

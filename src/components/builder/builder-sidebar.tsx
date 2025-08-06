@@ -1,9 +1,17 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Eye, Palette } from "lucide-react";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { SidebarNavigation } from "./sidebar-navigation";
 import { NavbarStylesDialog } from "./navbar-styles-dialog";
+import { FooterStylesDialog } from "@/components/footer/footer-styles-dialog";
 import ColorPicker from "@/components/color-picker";
 import { Component } from "@/components/component-renders";
 
@@ -30,12 +38,14 @@ interface BuilderSidebarProps {
   currentPage: string;
   theme?: ThemeSettings;
   hasNavbar: boolean;
+  hasFooter: boolean;
   onBackToDashboard: () => void;
   onPreviewSite: () => void;
   onPageChange: (page: string) => void;
   onPageAdd: () => void;
   onPageDelete: (pageName: string) => void;
   onNavbarStyleSelect: (style: string) => void;
+  onFooterStyleSelect: (style: string) => void;
   onComponentClick: (type: string) => void;
   onThemeChange: (settings: ThemeSettings) => void;
 }
@@ -46,20 +56,27 @@ export const BuilderSidebar: React.FC<BuilderSidebarProps> = ({
   currentPage,
   theme,
   hasNavbar,
+  hasFooter,
   onBackToDashboard,
   onPreviewSite,
   onPageChange,
   onPageAdd,
   onPageDelete,
   onNavbarStyleSelect,
+  onFooterStyleSelect,
   onComponentClick,
   onThemeChange,
 }) => {
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [showNavbarDialog, setShowNavbarDialog] = useState(false);
+  const [showFooterDialog, setShowFooterDialog] = useState(false);
 
   const handleNavbarClick = () => {
     setShowNavbarDialog(true);
+  };
+
+  const handleFooterClick = () => {
+    setShowFooterDialog(true);
   };
 
   return (
@@ -120,10 +137,12 @@ export const BuilderSidebar: React.FC<BuilderSidebarProps> = ({
         pages={pages}
         currentPage={currentPage}
         hasNavbar={hasNavbar}
+        hasFooter={hasFooter}
         onPageChange={onPageChange}
         onPageAdd={onPageAdd}
         onPageDelete={onPageDelete}
         onNavbarClick={handleNavbarClick}
+        onFooterClick={handleFooterClick}
         onComponentClick={onComponentClick}
       />
 
@@ -131,6 +150,12 @@ export const BuilderSidebar: React.FC<BuilderSidebarProps> = ({
         open={showNavbarDialog}
         onOpenChange={setShowNavbarDialog}
         onStyleSelect={onNavbarStyleSelect}
+      />
+
+      <FooterStylesDialog
+        open={showFooterDialog}
+        onOpenChange={setShowFooterDialog}
+        onStyleSelect={onFooterStyleSelect}
       />
     </div>
   );

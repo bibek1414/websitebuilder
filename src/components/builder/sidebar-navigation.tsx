@@ -1,17 +1,19 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Plus, Trash2, Navigation } from "lucide-react";
+import { Plus, Trash2, Navigation, Layout } from "lucide-react";
 import { Component } from "@/components/component-renders";
 
 interface SidebarNavigationProps {
   pages: { [key: string]: { components: Component[] } };
   currentPage: string;
   hasNavbar: boolean;
+  hasFooter: boolean;
   onPageChange: (page: string) => void;
   onPageAdd: () => void;
   onPageDelete: (pageName: string) => void;
   onNavbarClick: () => void;
+  onFooterClick: () => void;
   onComponentClick: (type: string) => void;
 }
 
@@ -19,12 +21,13 @@ const componentTemplates = [
   {
     type: "hero",
     name: "Hero Section",
-    description: "A customizable hero section with title, description, and buttons",
+    description:
+      "A customizable hero section with title, description, and buttons",
   },
-  { 
-    type: "text", 
-    name: "Text Block", 
-    description: "A simple text block" 
+  {
+    type: "text",
+    name: "Text Block",
+    description: "A simple text block",
   },
 ];
 
@@ -32,10 +35,12 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
   pages,
   currentPage,
   hasNavbar,
+  hasFooter,
   onPageChange,
   onPageAdd,
   onPageDelete,
   onNavbarClick,
+  onFooterClick,
   onComponentClick,
 }) => {
   return (
@@ -78,27 +83,46 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
       </div>
 
       <div className="p-4 border-b flex-shrink-0">
-        <h3 className="font-semibold mb-3">Navigation</h3>
-        <Card
-          className={`mb-2 cursor-pointer transition-colors ${
-            hasNavbar 
-              ? "bg-muted border-primary/50" 
-              : "hover:bg-accent"
-          }`}
-          onClick={onNavbarClick}
-        >
-          <CardContent className="p-3">
-            <div className="flex items-center">
-              <Navigation className="h-4 w-4 mr-2" />
-              <div>
-                <div className="font-medium">Navbar</div>
-                <div className="text-xs text-muted-foreground">
-                  {hasNavbar ? "Edit existing navbar" : "Add navigation bar"}
+        <h3 className="font-semibold mb-3">Site Structure</h3>
+        <div className="space-y-2">
+          <Card
+            className={`cursor-pointer transition-colors ${
+              hasNavbar ? "bg-muted border-primary/50" : "hover:bg-accent"
+            }`}
+            onClick={onNavbarClick}
+          >
+            <CardContent className="p-3">
+              <div className="flex items-center">
+                <Navigation className="h-4 w-4 mr-2" />
+                <div>
+                  <div className="font-medium">Navbar</div>
+                  <div className="text-xs text-muted-foreground">
+                    {hasNavbar ? "Edit existing navbar" : "Add navigation bar"}
+                  </div>
                 </div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+
+          <Card
+            className={`cursor-pointer transition-colors ${
+              hasFooter ? "bg-muted border-primary/50" : "hover:bg-accent"
+            }`}
+            onClick={onFooterClick}
+          >
+            <CardContent className="p-3">
+              <div className="flex items-center">
+                <Layout className="h-4 w-4 mr-2" />
+                <div>
+                  <div className="font-medium">Footer</div>
+                  <div className="text-xs text-muted-foreground">
+                    {hasFooter ? "Edit existing footer" : "Add footer section"}
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
 
       <div className="p-4 flex-1 overflow-y-auto">
