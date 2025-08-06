@@ -15,15 +15,12 @@ import {
   Plus,
   X,
   Settings,
-  ChevronDown,
   Type,
   MousePointer,
+  Upload,
+  ImageIcon,
 } from "lucide-react";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
+import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible";
 
 export interface HeroButton {
   id: string;
@@ -55,6 +52,25 @@ interface HeroProps {
   componentId?: string;
 }
 
+const convertUnsplashUrl = (
+  url: string,
+  width: number = 800,
+  quality: number = 80
+): string => {
+  if (!url) return "";
+
+  const unsplashPhotoMatch = url.match(
+    /unsplash\.com\/photos\/.*?-([a-zA-Z0-9_-]{11})/
+  );
+
+  if (unsplashPhotoMatch) {
+    const photoId = unsplashPhotoMatch[1];
+    return `https://images.unsplash.com/photo-${photoId}?w=${width}&q=${quality}`;
+  }
+
+  return url;
+};
+
 const defaultHeroData: HeroData = {
   title: "Welcome to Our Amazing Platform",
   subtitle: "Build Something Great",
@@ -70,8 +86,9 @@ const defaultHeroData: HeroData = {
     { id: "1", text: "Get Started", variant: "primary", href: "#" },
     { id: "2", text: "Learn More", variant: "outline", href: "#" },
   ],
-  showImage: false,
-  imageUrl: "",
+  showImage: true,
+  imageUrl:
+    "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=800&q=80",
   imageAlt: "Hero image",
 };
 
@@ -82,6 +99,7 @@ export function Hero({
   componentId,
 }: HeroProps) {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [imagePreview, setImagePreview] = useState<string>("");
 
   const handleUpdate = (updates: Partial<HeroData>) => {
     const newHeroData = { ...heroData, ...updates };
@@ -112,6 +130,24 @@ export function Hero({
     handleUpdate({ buttons: filteredButtons });
   };
 
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const result = e.target?.result as string;
+        setImagePreview(result);
+        handleUpdate({ imageUrl: result });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const selectQuickImage = (url: string) => {
+    handleUpdate({ imageUrl: url });
+    setImagePreview("");
+  };
+
   const getBackgroundStyles = () => {
     if (heroData.backgroundType === "gradient") {
       return {
@@ -134,6 +170,10 @@ export function Hero({
     }
   };
 
+  const getImageUrl = () => {
+    return imagePreview || convertUnsplashUrl(heroData.imageUrl);
+  };
+
   const renderPreview = () => (
     <section
       className="py-20 px-4 min-h-[60vh] flex items-center justify-center relative overflow-hidden"
@@ -144,9 +184,13 @@ export function Hero({
           {heroData.showImage && heroData.imageUrl && (
             <div className="mb-6">
               <img
-                src={heroData.imageUrl}
+                src={getImageUrl()}
                 alt={heroData.imageAlt}
                 className="max-w-md mx-auto rounded-lg shadow-lg"
+                onError={(e) => {
+                  e.currentTarget.src =
+                    "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=800&q=80";
+                }}
               />
             </div>
           )}
@@ -212,7 +256,6 @@ export function Hero({
         <CollapsibleContent>
           <CardContent className="p-6 border-t bg-muted/30">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Content Settings */}
               <div className="space-y-4">
                 <h3 className="font-semibold flex items-center gap-2">
                   <Type className="h-4 w-4" />
@@ -278,7 +321,6 @@ export function Hero({
               </div>
             </div>
 
-            {/* Buttons Section */}
             <div className="mt-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-semibold flex items-center gap-2">
@@ -341,10 +383,13 @@ export function Hero({
               </div>
             </div>
 
-            {/* Image Section */}
             <div className="mt-6">
-              <h3 className="font-semibold mb-4">Image (Optional)</h3>
-              <div className="space-y-3">
+              <h3 className="font-semibold flex items-center gap-2 mb-4">
+                <ImageIcon className="h-4 w-4" />
+                Image Management
+              </h3>
+
+              <div className="space-y-4">
                 <div className="flex items-center gap-2">
                   <input
                     type="checkbox"
@@ -362,20 +407,74 @@ export function Hero({
 
                 {heroData.showImage && (
                   <>
-                    <Input
-                      value={heroData.imageUrl}
-                      onChange={(e) =>
-                        handleUpdate({ imageUrl: e.target.value })
-                      }
-                      placeholder="Image URL"
-                    />
-                    <Input
-                      value={heroData.imageAlt}
-                      onChange={(e) =>
-                        handleUpdate({ imageAlt: e.target.value })
-                      }
-                      placeholder="Image alt text"
-                    />
+                    <div className="space-y-3">
+                      <div>
+                        <label className="text-sm font-medium mb-2 block">
+                          Upload Image
+                        </label>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleImageUpload}
+                            className="hidden"
+                            id="imageUpload"
+                          />
+                          <Button
+                            variant="outline"
+                            onClick={() =>
+                              document.getElementById("imageUpload")?.click()
+                            }
+                            className="w-full"
+                          >
+                            <Upload className="h-4 w-4 mr-2" />
+                            Upload New Image
+                          </Button>
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="text-sm font-medium mb-2 block">
+                          Image URL
+                        </label>
+                        <Input
+                          value={heroData.imageUrl}
+                          onChange={(e) =>
+                            handleUpdate({ imageUrl: e.target.value })
+                          }
+                          placeholder="Enter image URL or Unsplash photo URL"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-sm font-medium mb-2 block">
+                          Alt Text
+                        </label>
+                        <Input
+                          value={heroData.imageAlt}
+                          onChange={(e) =>
+                            handleUpdate({ imageAlt: e.target.value })
+                          }
+                          placeholder="Describe the image for accessibility"
+                        />
+                      </div>
+
+                      {(imagePreview || heroData.imageUrl) && (
+                        <div>
+                          <label className="text-sm font-medium mb-2 block">
+                            Current Image Preview
+                          </label>
+                          <img
+                            src={getImageUrl()}
+                            alt="Preview"
+                            className="max-w-xs rounded-lg border"
+                            onError={(e) => {
+                              e.currentTarget.style.display = "none";
+                            }}
+                          />
+                        </div>
+                      )}
+                    </div>
                   </>
                 )}
               </div>

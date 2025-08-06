@@ -1,12 +1,7 @@
 import React from "react";
 import { useDraggable, useDroppable } from "@dnd-kit/core";
 import { GripVertical } from "lucide-react";
-import {
-  Card,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 
 const DraggableNavbarPreview = ({
   id,
@@ -76,7 +71,6 @@ export const DroppableEditorZone = ({
   );
 };
 
-// New component for sidebar navbar styles
 export const NavbarStylesSection = ({
   onStyleSelect,
 }: {
