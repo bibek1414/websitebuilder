@@ -273,7 +273,7 @@ function BuilderContent() {
           title: "Stay Updated",
           description: "Subscribe to our newsletter for the latest updates and news."
         },
-        copyright: "© 2024 Your Company. All rights reserved."
+        copyright: "© 2025 Your Company. All rights reserved."
       };
       newComponent.footerData = defaultFooterData;
       newComponent.content = "";

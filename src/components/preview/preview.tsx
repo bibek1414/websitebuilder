@@ -3,9 +3,10 @@ import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { ComponentRenderer, Component } from "@/components/component-renders";
 import { HeroData } from "@/components/hero/hero";
-import { Button } from "@/components/ui/button";
+import { FooterData } from "@/types/footer";
 import { Card, CardContent } from "@/components/ui/card";
 import { AlertCircle, FileX } from "lucide-react";
+import { Facebook, Twitter } from "lucide-react";
 
 interface ThemeColors {
   primary: string;
@@ -55,6 +56,7 @@ interface RawComponentData {
     }>;
   };
   heroData?: HeroData;
+  footerData?: FooterData;
 }
 
 // Available fonts for fallback reference
@@ -147,6 +149,7 @@ function normalizeComponent(component: RawComponentData): Component {
     content: component.content || "",
     navbarData: component.navbarData,
     heroData: component.heroData,
+    footerData: component.footerData,
   };
 
   // Ensure hero components have proper data structure
@@ -171,6 +174,54 @@ function normalizeComponent(component: RawComponentData): Component {
       imageAlt: "Hero image",
     };
     normalized.heroData = defaultHeroData;
+  }
+
+  // Ensure footer components have proper data structure
+  if (normalized.type === "footer" && !normalized.footerData) {
+    const defaultFooterData: FooterData = {
+      companyName: "Your Company",
+      description:
+        "Building amazing experiences for our customers with innovative solutions and exceptional service.",
+      sections: [
+        {
+          id: "1",
+          title: "Company",
+          links: [
+            { id: "1", text: "About Us", href: "#about" },
+            { id: "2", text: "Our Team", href: "#team" },
+            { id: "3", text: "Careers", href: "#careers" },
+            { id: "4", text: "Contact", href: "#contact" },
+          ],
+        },
+        {
+          id: "2",
+          title: "Services",
+          links: [
+            { id: "1", text: "Web Design", href: "#web-design" },
+            { id: "2", text: "Development", href: "#development" },
+            { id: "3", text: "Consulting", href: "#consulting" },
+            { id: "4", text: "Support", href: "#support" },
+          ],
+        },
+      ],
+      socialLinks: [
+        { id: "1", platform: "Facebook", href: "#", icon: Facebook },
+        { id: "2", platform: "Twitter", href: "#", icon: Twitter },
+      ],
+      contactInfo: {
+        email: "hello@company.com",
+        phone: "+1 (555) 123-4567",
+        address: "123 Business St, City, State 12345",
+      },
+      newsletter: {
+        enabled: true,
+        title: "Stay Updated",
+        description:
+          "Subscribe to our newsletter for the latest updates and news.",
+      },
+      copyright: "© 2025 Your Company. All rights reserved.",
+    };
+    normalized.footerData = defaultFooterData;
   }
 
   return normalized;
@@ -244,6 +295,11 @@ function EnhancedComponentRenderer({
       ...component.navbarData,
       links: updatedLinks,
     };
+  }
+
+  // For footer components, ensure footer data is properly passed
+  if (component.type === "footer" && component.footerData) {
+    enhancedComponent.footerData = { ...component.footerData };
   }
 
   return <ComponentRenderer component={enhancedComponent} isPreview={true} />;
@@ -352,6 +408,12 @@ function PreviewContent() {
     );
   }
 
+  // Check if there's a footer component in the current page
+  const hasFooterComponent =
+    siteData.pages[currentPage]?.components.some(
+      (component) => component.type === "footer"
+    ) || false;
+
   return (
     <div className="min-h-screen bg-background">
       <main>
@@ -380,9 +442,14 @@ function PreviewContent() {
         )}
       </main>
 
-      <footer className="bg-muted border-t py-4 text-center text-sm text-muted-foreground">
-        <div className="container mx-auto px-4">Built with Website Builder</div>
-      </footer>
+      {/* Only show the default footer if there's no footer component */}
+      {!hasFooterComponent && (
+        <footer className="bg-muted border-t py-4 text-center text-sm text-muted-foreground">
+          <div className="container mx-auto px-4">
+            Built with Website Builder
+          </div>
+        </footer>
+      )}
     </div>
   );
 }

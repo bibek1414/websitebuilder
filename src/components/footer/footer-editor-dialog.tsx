@@ -15,9 +15,6 @@ import {
   Twitter,
   Instagram,
   Linkedin,
-  Mail,
-  Phone,
-  MapPin,
   Plus,
   Trash2,
   Edit3,
@@ -250,7 +247,7 @@ export function FooterEditorDialog({
                 <Input
                   value={editingData.copyright}
                   onChange={(e) => updateBasicInfo("copyright", e.target.value)}
-                  placeholder="© 2024 Your Company. All rights reserved."
+                  placeholder="© 2025 Your Company. All rights reserved."
                 />
               </div>
             </CardContent>
@@ -276,7 +273,7 @@ export function FooterEditorDialog({
                 <Input
                   value={editingData.contactInfo.phone || ""}
                   onChange={(e) => updateContactInfo("phone", e.target.value)}
-                  placeholder="+1 (555) 123-4567"
+                  placeholder="+977 1234567890"
                 />
               </div>
               <div>
@@ -286,7 +283,7 @@ export function FooterEditorDialog({
                 <Input
                   value={editingData.contactInfo.address || ""}
                   onChange={(e) => updateContactInfo("address", e.target.value)}
-                  placeholder="123 Business St, City, State 12345"
+                  placeholder="Sankhapur, Kathmandu, Nepal"
                 />
               </div>
             </CardContent>

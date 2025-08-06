@@ -88,7 +88,7 @@ const footerStyles: FooterStyle[] = [
             </div>
             <div className="flex items-center text-xs text-muted-foreground">
               <Phone className="h-3 w-3 mr-1" />
-              +1 (555) 123-4567
+              +977 1234567890
             </div>
           </div>
           <div>
@@ -109,7 +109,7 @@ const footerStyles: FooterStyle[] = [
           </div>
         </div>
         <div className="pt-2 border-t text-center">
-          <div className="text-xs text-muted-foreground">© 2024 Company. All rights reserved.</div>
+          <div className="text-xs text-muted-foreground">© 2025 Company. All rights reserved.</div>
         </div>
       </div>
     ),
@@ -162,7 +162,7 @@ const footerStyles: FooterStyle[] = [
               <Mail className="h-3 w-3 mr-1 text-primary" />
               <span className="text-muted-foreground">hello@company.com</span>
             </div>
-            <div className="text-muted-foreground">© 2024 Company</div>
+            <div className="text-muted-foreground">© 2025 Company</div>
           </div>
         </div>
       </div>

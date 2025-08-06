@@ -9,9 +9,12 @@ import {
   Heart,
   ExternalLink,
   Edit3,
+  Facebook,
+  Twitter,
+  Instagram,
+  Linkedin,
 } from "lucide-react";
 import { FooterData, SocialLink } from "@/types/footer";
-
 
 interface FooterStyle2Props {
   footerData: FooterData;
@@ -19,10 +22,30 @@ interface FooterStyle2Props {
   onEditClick?: () => void;
 }
 
-// Helper function to render social icons
+// Icon mapping to resolve serialized icons
+const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
+  Facebook,
+  Twitter,
+  Instagram,
+  Linkedin,
+};
+
+// Helper function to render social icons with proper fallback
 const renderSocialIcon = (social: SocialLink) => {
-  const IconComponent = social.icon;
-  return <IconComponent className="h-4 w-4" />;
+  // First, try to get the icon from the mapping based on platform name
+  const IconFromMap = iconMap[social.platform];
+  if (IconFromMap) {
+    return <IconFromMap className="h-4 w-4" />;
+  }
+
+  // If the icon is a proper React component (function), use it directly
+  if (typeof social.icon === "function") {
+    const IconComponent = social.icon;
+    return <IconComponent className="h-4 w-4" />;
+  }
+
+  // Fallback to a default icon if nothing else works
+  return <Facebook className="h-4 w-4" />;
 };
 
 export function FooterStyle2({
