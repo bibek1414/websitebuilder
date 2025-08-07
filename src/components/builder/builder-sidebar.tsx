@@ -46,7 +46,7 @@ interface BuilderSidebarProps {
   onPageDelete: (pageName: string) => void;
   onNavbarStyleSelect: (style: string) => void;
   onFooterStyleSelect: (style: string) => void;
-  onComponentClick: (type: string) => void;
+  onComponentClick: (type: string, style?: string) => void;
   onThemeChange: (settings: ThemeSettings) => void;
 }
 

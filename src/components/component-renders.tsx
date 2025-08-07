@@ -9,9 +9,13 @@ import { Navbar1 } from "./navbar/navbar-1";
 import { Navbar2 } from "./navbar/navbar-2";
 import { Navbar3 } from "./navbar/navbar-3";
 import { Hero, HeroData } from "./hero/hero";
-import { Footer  } from "./footer/footer";
-import {FooterData} from "@/types/footer";
+import { Hero2, Hero2Data, defaultHero2Data } from "./hero/hero-2";
+import { Footer } from "./footer/footer";
+import { FooterData } from "@/types/footer";
 import { Facebook, Twitter } from "lucide-react";
+import { ProductsList } from "./products/product-list";
+import { ProductsData } from "@/types/product";
+
 export interface Component {
   id: string;
   type: string;
@@ -28,7 +32,9 @@ export interface Component {
     }>;
   };
   heroData?: HeroData;
+  hero2Data?: Hero2Data;
   footerData?: FooterData;
+  productsData?: ProductsData;
 }
 
 interface NavbarUpdateData {
@@ -56,11 +62,25 @@ interface TextUpdateData {
   content: string;
 }
 
-type ComponentUpdateData = NavbarUpdateData | HeroUpdateData | FooterUpdateData | TextUpdateData;
+interface Hero2UpdateData {
+  hero2Data: Hero2Data;
+}
+
+interface ProductsUpdateData {
+  productsData: ProductsData;
+}
+export type ComponentUpdateData =
+  | NavbarUpdateData
+  | HeroUpdateData
+  | Hero2UpdateData
+  | FooterUpdateData
+  | TextUpdateData
+  | ProductsUpdateData;
 
 interface ComponentRendererProps {
   component: Component;
   isPreview?: boolean;
+  siteId?: string;
   onUpdate?: (componentId: string, newContent: ComponentUpdateData) => void;
   onRemove?: (componentId: string) => void;
 }
@@ -107,6 +127,7 @@ const SortableWrapper = ({
 export function ComponentRenderer({
   component,
   isPreview = false,
+  siteId,
   onUpdate,
   onRemove,
 }: ComponentRendererProps) {
@@ -127,7 +148,12 @@ export function ComponentRenderer({
   ) => {
     onUpdate?.(componentId, newHeroData);
   };
-
+  const handleHero2Update = (
+    componentId: string,
+    newHero2Data: Hero2UpdateData
+  ) => {
+    onUpdate?.(componentId, newHero2Data);
+  };
   const handleFooterUpdate = (
     componentId: string,
     newFooterData: FooterUpdateData
@@ -161,39 +187,53 @@ export function ComponentRenderer({
         }
 
       case "hero":
-        const defaultHeroData: HeroData = {
-          title: "Welcome to Our Amazing Platform",
-          subtitle: "Build Something Great",
-          description:
-            "Create beautiful, responsive websites with our intuitive drag-and-drop builder. No coding required.",
-          layout: "center",
-          backgroundType: "gradient",
-          backgroundColor: "primary",
-          gradientFrom: "primary",
-          gradientTo: "secondary",
-          textColor: "primary-foreground",
-          buttons: [
-            { id: "1", text: "Get Started", variant: "primary", href: "#" },
-            { id: "2", text: "Learn More", variant: "outline", href: "#" },
-          ],
-          showImage: false,
-          imageUrl: "",
-          imageAlt: "Hero image",
-        };
+        switch (component.style) {
+          case "style-2":
+            return (
+              <Hero2
+                heroData={component.hero2Data || defaultHero2Data}
+                isEditable={!isPreview}
+                onUpdate={handleHero2Update}
+                componentId={component.id}
+              />
+            );
+          case "style-1":
+          default:
+            const defaultHeroData: HeroData = {
+              title: "Welcome to Our Amazing Platform",
+              subtitle: "Build Something Great",
+              description:
+                "Create beautiful, responsive websites with our intuitive drag-and-drop builder. No coding required.",
+              layout: "center",
+              backgroundType: "gradient",
+              backgroundColor: "primary",
+              gradientFrom: "primary",
+              gradientTo: "secondary",
+              textColor: "primary-foreground",
+              buttons: [
+                { id: "1", text: "Get Started", variant: "primary", href: "#" },
+                { id: "2", text: "Learn More", variant: "outline", href: "#" },
+              ],
+              showImage: false,
+              imageUrl: "",
+              imageAlt: "Hero image",
+            };
 
-        return (
-          <Hero
-            heroData={component.heroData || defaultHeroData}
-            isEditable={!isPreview}
-            onUpdate={handleHeroUpdate}
-            componentId={component.id}
-          />
-        );
+            return (
+              <Hero
+                heroData={component.heroData || defaultHeroData}
+                isEditable={!isPreview}
+                onUpdate={handleHeroUpdate}
+                componentId={component.id}
+              />
+            );
+        }
 
       case "footer":
         const defaultFooterData: FooterData = {
           companyName: "Your Company",
-          description: "Building amazing experiences for our customers with innovative solutions and exceptional service.",
+          description:
+            "Building amazing experiences for our customers with innovative solutions and exceptional service.",
           sections: [
             {
               id: "1",
@@ -202,8 +242,8 @@ export function ComponentRenderer({
                 { id: "1", text: "About Us", href: "#about" },
                 { id: "2", text: "Our Team", href: "#team" },
                 { id: "3", text: "Careers", href: "#careers" },
-                { id: "4", text: "Contact", href: "#contact" }
-              ]
+                { id: "4", text: "Contact", href: "#contact" },
+              ],
             },
             {
               id: "2",
@@ -212,9 +252,9 @@ export function ComponentRenderer({
                 { id: "1", text: "Web Design", href: "#web-design" },
                 { id: "2", text: "Development", href: "#development" },
                 { id: "3", text: "Consulting", href: "#consulting" },
-                { id: "4", text: "Support", href: "#support" }
-              ]
-            }
+                { id: "4", text: "Support", href: "#support" },
+              ],
+            },
           ],
           socialLinks: [
             { id: "1", platform: "Facebook", href: "#", icon: Facebook },
@@ -223,14 +263,15 @@ export function ComponentRenderer({
           contactInfo: {
             email: "hello@company.com",
             phone: "+1 (555) 123-4567",
-            address: "123 Business St, City, State 12345"
+            address: "123 Business St, City, State 12345",
           },
           newsletter: {
             enabled: true,
             title: "Stay Updated",
-            description: "Subscribe to our newsletter for the latest updates and news."
+            description:
+              "Subscribe to our newsletter for the latest updates and news.",
           },
-          copyright: "© 2025 Your Company. All rights reserved."
+          copyright: "© 2025 Your Company. All rights reserved.",
         };
 
         return (
@@ -240,6 +281,16 @@ export function ComponentRenderer({
             isEditable={!isPreview}
             onUpdate={handleFooterUpdate}
             componentId={component.id}
+          />
+        );
+
+      case "products":
+        return (
+          <ProductsList
+            component={component}
+            isPreview={isPreview}
+            onUpdate={onUpdate}
+            siteId={siteId}
           />
         );
 

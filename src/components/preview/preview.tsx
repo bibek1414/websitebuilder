@@ -3,10 +3,16 @@ import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { ComponentRenderer, Component } from "@/components/component-renders";
 import { HeroData } from "@/components/hero/hero";
+import { Hero2Data } from "@/components/hero/hero-2";
 import { FooterData } from "@/types/footer";
 import { Card, CardContent } from "@/components/ui/card";
 import { AlertCircle, FileX } from "lucide-react";
 import { Facebook, Twitter } from "lucide-react";
+import { ProductDetail } from "@/components/products/product-details";
+import { Product } from "@/types/product";
+
+
+
 
 interface ThemeColors {
   primary: string;
@@ -37,6 +43,7 @@ interface SiteData {
     [key: string]: PageData;
   };
   theme?: ThemeSettings;
+  products?: Product[];
 }
 
 // Define the shape of raw component data from localStorage
@@ -56,7 +63,14 @@ interface RawComponentData {
     }>;
   };
   heroData?: HeroData;
+  hero2Data?: Hero2Data;
   footerData?: FooterData;
+  productsData?: {
+    products?: Product[];
+    layout?: string;
+    showFilters?: boolean;
+    categories?: string[];
+  };
 }
 
 // Available fonts for fallback reference
@@ -149,7 +163,9 @@ function normalizeComponent(component: RawComponentData): Component {
     content: component.content || "",
     navbarData: component.navbarData,
     heroData: component.heroData,
+    hero2Data: component.hero2Data,
     footerData: component.footerData,
+    productsData: component.productsData,
   };
 
   // Ensure hero components have proper data structure
@@ -224,6 +240,16 @@ function normalizeComponent(component: RawComponentData): Component {
     normalized.footerData = defaultFooterData;
   }
 
+  // Ensure products components have proper data structure
+  if (normalized.type === "products" && !normalized.productsData) {
+    normalized.productsData = {
+      products: [],
+      layout: "grid",
+      showFilters: true,
+      categories: [],
+    };
+  }
+
   return normalized;
 }
 
@@ -258,6 +284,7 @@ interface EnhancedComponentRendererProps {
   siteId: string;
   currentPage: string;
   pages: { [key: string]: PageData };
+  siteData?: SiteData;
 }
 
 function EnhancedComponentRenderer({
@@ -265,6 +292,7 @@ function EnhancedComponentRenderer({
   siteId,
   currentPage,
   pages,
+  siteData,
 }: EnhancedComponentRendererProps) {
   // Clone the component and update navbar links if it's a navbar
   const enhancedComponent = { ...component };
@@ -297,12 +325,21 @@ function EnhancedComponentRenderer({
     };
   }
 
-  // For footer components, ensure footer data is properly passed
-  if (component.type === "footer" && component.footerData) {
-    enhancedComponent.footerData = { ...component.footerData };
+  // For products components, ensure they have access to site products data
+  if (component.type === "products" && siteData?.products) {
+    enhancedComponent.productsData = {
+      ...component.productsData,
+      products: siteData.products,
+    };
   }
 
-  return <ComponentRenderer component={enhancedComponent} isPreview={true} />;
+  return (
+    <ComponentRenderer
+      component={enhancedComponent}
+      isPreview={true}
+      siteId={siteId}
+    />
+  );
 }
 
 function PreviewContent() {
@@ -312,6 +349,7 @@ function PreviewContent() {
 
   const siteId = searchParams.get("site");
   const pageParam = searchParams.get("page");
+  const productId = searchParams.get("product");
 
   const [siteData, setSiteData] = useState<SiteData>({ pages: {} });
   const [currentPage, setCurrentPage] = useState("home");
@@ -325,6 +363,7 @@ function PreviewContent() {
           const parsedData = JSON.parse(savedSite) as {
             pages?: { [key: string]: { components?: RawComponentData[] } };
             theme?: ThemeSettings;
+            products?: Product[];
           };
           const normalizedData: SiteData = { pages: {} };
 
@@ -341,6 +380,11 @@ function PreviewContent() {
           // Include theme data
           if (parsedData.theme) {
             normalizedData.theme = parsedData.theme;
+          }
+
+          // Include products data
+          if (parsedData.products) {
+            normalizedData.products = parsedData.products;
           }
 
           setSiteData(normalizedData);
@@ -408,16 +452,32 @@ function PreviewContent() {
     );
   }
 
-  // Check if there's a footer component in the current page
-  const hasFooterComponent =
-    siteData.pages[currentPage]?.components.some(
-      (component) => component.type === "footer"
-    ) || false;
+  // Determine which page to render
+  const pageToRender = productId ? "home" : currentPage;
+  const components = siteData.pages[pageToRender]?.components || [];
+  const navbar = components.find((c) => c.type === "navbar");
+  const footer = components.find((c) => c.type === "footer");
+  const mainComponents = components.filter(
+    (c) => c.type !== "navbar" && c.type !== "footer"
+  );
 
   return (
-    <div className="min-h-screen bg-background">
-      <main>
-        {siteData.pages[currentPage]?.components.length === 0 ? (
+    <div className="min-h-screen bg-background flex flex-col">
+      {/* Render navbar if it exists */}
+      {navbar && (
+        <EnhancedComponentRenderer
+          component={navbar}
+          siteId={siteId}
+          currentPage={pageToRender}
+          pages={siteData.pages}
+          siteData={siteData}
+        />
+      )}
+
+      <main className="flex-grow">
+        {productId ? (
+          <ProductDetail productId={productId} />
+        ) : mainComponents.length === 0 ? (
           <div className="flex items-center justify-center h-96">
             <Card className="text-center p-8">
               <CardContent className="pt-6">
@@ -430,20 +490,32 @@ function PreviewContent() {
             </Card>
           </div>
         ) : (
-          siteData.pages[currentPage]?.components.map((component) => (
+          mainComponents.map((component) => (
             <EnhancedComponentRenderer
               key={component.id}
               component={component}
-              siteId={siteId!}
+              siteId={siteId}
               currentPage={currentPage}
               pages={siteData.pages}
+              siteData={siteData}
             />
           ))
         )}
       </main>
 
-      {/* Only show the default footer if there's no footer component */}
-      {!hasFooterComponent && (
+      {/* Render footer if it exists */}
+      {footer && (
+        <EnhancedComponentRenderer
+          component={footer}
+          siteId={siteId}
+          currentPage={pageToRender}
+          pages={siteData.pages}
+          siteData={siteData}
+        />
+      )}
+
+      {/* Default footer if no footer component */}
+      {!footer && (
         <footer className="bg-muted border-t py-4 text-center text-sm text-muted-foreground">
           <div className="container mx-auto px-4">
             Built with Website Builder

@@ -3,6 +3,7 @@ import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ComponentRenderer, Component } from "@/components/component-renders";
 import { HeroData } from "@/components/hero/hero";
+import { Hero2Data, defaultHero2Data } from "@/components/hero/hero-2";
 import { FooterData } from "@/types/footer";
 import { Badge } from "@/components/ui/badge";
 import { LayoutTemplate, Palette } from "lucide-react";
@@ -15,8 +16,6 @@ import {
 import { BuilderSidebar } from "./builder-sidebar";
 import { DroppableEditorZone } from "./droppable-editor-zone";
 import { Facebook, Twitter } from "lucide-react";
-
-
 
 interface ThemeColors {
   primary: string;
@@ -85,14 +84,6 @@ const loadGoogleFonts = () => {
     "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto:wght@400;500;700&family=Playfair+Display:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap";
   link.rel = "stylesheet";
   link.setAttribute("data-font-loader", "google-fonts");
-
-  link.onload = () => {
-    console.log("Google Fonts loaded successfully");
-  };
-
-  link.onerror = () => {
-    console.warn("Failed to load Google Fonts, using fallback fonts");
-  };
 
   document.head.appendChild(link);
 };
@@ -212,31 +203,41 @@ function BuilderContent() {
         ],
       };
     } else if (type === "hero") {
-      const defaultHeroData: HeroData = {
-        title: "Welcome to Our Amazing Platform",
-        subtitle: "Build Something Great",
-        description:
-          "Create beautiful, responsive websites with our intuitive drag-and-drop builder. No coding required.",
-        layout: "center",
-        backgroundType: "gradient",
-        backgroundColor: "primary",
-        gradientFrom: "primary",
-        gradientTo: "secondary",
-        textColor: "primary-foreground",
-        buttons: [
-          { id: "1", text: "Get Started", variant: "primary", href: "#" },
-          { id: "2", text: "Learn More", variant: "outline", href: "#" },
-        ],
-        showImage: false,
-        imageUrl: "",
-        imageAlt: "Hero image",
-      };
-      newComponent.heroData = defaultHeroData;
-      newComponent.content = "";
+      if (style === "style-2") {
+        newComponent.hero2Data = {
+          ...defaultHero2Data,
+          title: "Your Amazing Journey Starts Here",
+          subtitle:
+            "Create beautiful, responsive websites with our intuitive drag-and-drop builder. No coding required.",
+        };
+        newComponent.heroData = undefined;
+      } else {
+        newComponent.heroData = {
+          title: "Welcome to Our Amazing Platform",
+          subtitle: "Build Something Great",
+          description:
+            "Create beautiful, responsive websites with our intuitive drag-and-drop builder. No coding required.",
+          layout: "center",
+          backgroundType: "gradient",
+          backgroundColor: "primary",
+          gradientFrom: "primary",
+          gradientTo: "secondary",
+          textColor: "primary-foreground",
+          buttons: [
+            { id: "1", text: "Get Started", variant: "primary", href: "#" },
+            { id: "2", text: "Learn More", variant: "outline", href: "#" },
+          ],
+          showImage: false,
+          imageUrl: "",
+          imageAlt: "Hero image",
+        };
+        newComponent.hero2Data = undefined;
+      }
     } else if (type === "footer") {
       const defaultFooterData: FooterData = {
         companyName: "Your Company",
-        description: "Building amazing experiences for our customers with innovative solutions and exceptional service.",
+        description:
+          "Building amazing experiences for our customers with innovative solutions and exceptional service.",
         sections: [
           {
             id: "1",
@@ -245,8 +246,8 @@ function BuilderContent() {
               { id: "1", text: "About Us", href: "#about" },
               { id: "2", text: "Our Team", href: "#team" },
               { id: "3", text: "Careers", href: "#careers" },
-              { id: "4", text: "Contact", href: "#contact" }
-            ]
+              { id: "4", text: "Contact", href: "#contact" },
+            ],
           },
           {
             id: "2",
@@ -255,29 +256,37 @@ function BuilderContent() {
               { id: "1", text: "Web Design", href: "#web-design" },
               { id: "2", text: "Development", href: "#development" },
               { id: "3", text: "Consulting", href: "#consulting" },
-              { id: "4", text: "Support", href: "#support" }
-            ]
-          }
+              { id: "4", text: "Support", href: "#support" },
+            ],
+          },
         ],
         socialLinks: [
           { id: "1", platform: "Facebook", href: "#", icon: Facebook },
-          { id: "2", platform: "Twitter", href: "#", icon:Twitter },]
-        ,
+          { id: "2", platform: "Twitter", href: "#", icon: Twitter },
+        ],
         contactInfo: {
           email: "hello@company.com",
           phone: "+1 (555) 123-4567",
-          address: "123 Business St, City, State 12345"
+          address: "123 Business St, City, State 12345",
         },
         newsletter: {
           enabled: true,
           title: "Stay Updated",
-          description: "Subscribe to our newsletter for the latest updates and news."
+          description:
+            "Subscribe to our newsletter for the latest updates and news.",
         },
-        copyright: "© 2025 Your Company. All rights reserved."
+        copyright: "© 2025 Your Company. All rights reserved.",
       };
       newComponent.footerData = defaultFooterData;
       newComponent.content = "";
+    } else if (type === "products") {
+      newComponent.productsData = {
+        title: "Featured Products",
+        limit: 8,
+      };
+      newComponent.content = "";
     }
+
 
     const updatedSiteData = { ...siteData };
     if (!updatedSiteData.pages[currentPage]) {
@@ -287,8 +296,8 @@ function BuilderContent() {
     saveSite(updatedSiteData);
   };
 
-  const handleComponentClick = (type: string) => {
-    addComponent(type);
+  const handleComponentClick = (type: string, style?: string) => {
+    addComponent(type, style);
   };
 
   const handleNavbarStyleSelect = (style: string) => {
@@ -332,30 +341,7 @@ function BuilderContent() {
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
-
     if (!over) return;
-
-    if (
-      active.data.current?.type === "navbar" &&
-      over.id === "editor-drop-zone"
-    ) {
-      addComponent("navbar", active.data.current.style);
-      return;
-    }
-
-    if (
-      active.data.current?.type === "footer" &&
-      over.id === "editor-drop-zone"
-    ) {
-      addComponent("footer", active.data.current.style);
-      return;
-    }
-
-    if (active.data.current?.componentType && over.id === "editor-drop-zone") {
-      addComponent(active.data.current.componentType);
-      return;
-    }
-
     if (active.id !== over.id) {
       const components = siteData.pages[currentPage]?.components || [];
       const oldIndex = components.findIndex((c) => c.id === active.id);

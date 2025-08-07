@@ -1,7 +1,12 @@
-// next.config.js
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+
+  // Allow loading images from cdn.dummyjson.com
+  images: {
+    domains: ["cdn.dummyjson.com"],
+  },
+
   // For subdomain routing in production
   async rewrites() {
     return [

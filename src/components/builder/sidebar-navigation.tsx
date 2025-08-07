@@ -1,7 +1,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Plus, Trash2, Navigation, Layout } from "lucide-react";
+import { Plus, Trash2, Navigation, Layout, ShoppingBag } from "lucide-react";
 import { Component } from "@/components/component-renders";
 
 interface SidebarNavigationProps {
@@ -14,20 +14,45 @@ interface SidebarNavigationProps {
   onPageDelete: (pageName: string) => void;
   onNavbarClick: () => void;
   onFooterClick: () => void;
-  onComponentClick: (type: string) => void;
+  onComponentClick: (type: string, style?: string) => void;
 }
 
 const componentTemplates = [
   {
     type: "hero",
-    name: "Hero Section",
+    style: "style-1",
+    name: "Hero Section - Basic",
+    description: "A large, attention-grabbing section with a centered layout.",
+  },
+  {
+    type: "hero",
+    style: "style-2",
+    name: "Hero Section - Advanced",
     description:
-      "A customizable hero section with title, description, and buttons",
+      "A customizable hero with background image/slider and flexible text.",
+  },
+  {
+    type: "products",
+    style: "style-1",
+    name: "Product Grid - Classic",
+    description: "A classic grid layout for showcasing products.",
+  },
+  {
+    type: "products",
+    style: "style-2",
+    name: "Product Grid - Modern",
+    description: "A modern card grid with more details and hover effects.",
+  },
+  {
+    type: "products",
+    style: "style-3",
+    name: "Product List - Horizontal",
+    description: "A list-style layout for products, ideal for catalogs.",
   },
   {
     type: "text",
     name: "Text Block",
-    description: "A simple text block",
+    description: "A simple text block for content.",
   },
 ];
 
@@ -43,6 +68,10 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
   onFooterClick,
   onComponentClick,
 }) => {
+  const handleComponentClick = (template: (typeof componentTemplates)[0]) => {
+    onComponentClick(template.type, template.style);
+  };
+
   return (
     <>
       <div className="p-4 border-b flex-shrink-0">
@@ -124,14 +153,13 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
           </Card>
         </div>
       </div>
-
       <div className="p-4 flex-1 overflow-y-auto">
         <h3 className="font-semibold mb-2">Components</h3>
         {componentTemplates.map((template) => (
           <Card
-            key={template.type}
+            key={`${template.type}-${template.style || "default"}`}
             className="mb-2 cursor-pointer hover:bg-accent transition-colors"
-            onClick={() => onComponentClick(template.type)}
+            onClick={() => handleComponentClick(template)}
           >
             <CardContent className="p-3">
               <div className="font-medium capitalize">{template.name}</div>
