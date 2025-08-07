@@ -1,5 +1,3 @@
-
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -286,7 +284,7 @@ export function Hero2({
         />
       )}
       <div
-        className="relative z-10 container mx-auto flex items-end gap-8"
+        className="relative z-10 container mx-auto flex items-end gap-8 max-w-7xl"
         style={{ color: heroData.textColor }}
       >
         <div className={`flex flex-col gap-4 ${getLayoutClasses()}`}>
@@ -316,18 +314,18 @@ export function Hero2({
         </div>
 
         {heroData.showSlider && heroData.sliderImages.length > 0 && (
-          <div className="hidden lg:block w-1/2 relative">
+          <div className="hidden lg:block w-1/3 relative  items-center justify-center">
             <div className="overflow-hidden rounded-lg" ref={emblaRef}>
               <div className="flex">
                 {heroData.sliderImages.map((img) => (
                   <div
-                    className="flex-grow-0 flex-shrink-0 w-full"
+                    className="flex-grow-0 flex-shrink-0 w-full flex justify-center"
                     key={img.id}
                   >
                     <img
                       src={getSliderImageUrl(img.id, img.url)}
                       alt={img.alt}
-                      className="w-full h-64 object-cover"
+                      className="w-90 h-64 object-fill"
                       onError={(e) => {
                         e.currentTarget.src =
                           "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=800&q=80";
@@ -337,18 +335,22 @@ export function Hero2({
                 ))}
               </div>
             </div>
+
+            {/* Left Chevron */}
             <Button
               variant="outline"
               size="icon"
-              className="absolute top-1/2 -translate-y-1/2 left-2 "
+              className="absolute top-1/2 -translate-y-1/2 left-2 bg-secondary z-10"
               onClick={scrollPrev}
             >
               <ChevronLeft className="h-4 w-4" />
             </Button>
+
+            {/* Right Chevron */}
             <Button
               variant="outline"
               size="icon"
-              className="absolute top-1/2 -translate-y-1/2 right-2 "
+              className="absolute top-1/2 -translate-y-1/2 right-2 bg-secondary z-10"
               onClick={scrollNext}
             >
               <ChevronRight className="h-4 w-4" />
