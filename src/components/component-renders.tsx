@@ -2,7 +2,7 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
-import { X, GripVertical } from "lucide-react";
+import { X, GripVertical, Users } from "lucide-react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Navbar1 } from "./navbar/navbar-1";
@@ -15,7 +15,16 @@ import { FooterData } from "@/types/footer";
 import { Facebook, Twitter } from "lucide-react";
 import { ProductsList } from "./products/product-list";
 import { ProductsData } from "@/types/product";
-
+import {
+  AboutUs1,
+  AboutUs1Data,
+  defaultAboutUs1Data,
+} from "./about/about-us-1";
+import {
+  AboutUs2,
+  AboutUs2Data,
+  defaultAboutUs2Data,
+} from "./about/about-us-2";
 export interface Component {
   id: string;
   type: string;
@@ -33,6 +42,8 @@ export interface Component {
   };
   heroData?: HeroData;
   hero2Data?: Hero2Data;
+  aboutUs1Data?: AboutUs1Data;
+  aboutUs2Data?: AboutUs2Data;
   footerData?: FooterData;
   productsData?: ProductsData;
 }
@@ -69,12 +80,20 @@ interface Hero2UpdateData {
 interface ProductsUpdateData {
   productsData: ProductsData;
 }
+interface AboutUs1UpdateData {
+  aboutUs1Data: AboutUs1Data;
+}
+interface AboutUs2UpdateData {
+  aboutUs2Data: AboutUs2Data;
+}
 export type ComponentUpdateData =
   | NavbarUpdateData
   | HeroUpdateData
   | Hero2UpdateData
   | FooterUpdateData
   | TextUpdateData
+  | AboutUs1UpdateData
+  | AboutUs2UpdateData
   | ProductsUpdateData;
 
 interface ComponentRendererProps {
@@ -159,6 +178,19 @@ export function ComponentRenderer({
     newFooterData: FooterUpdateData
   ) => {
     onUpdate?.(componentId, newFooterData);
+  };
+  const handleAboutUs1Update = (
+    componentId: string,
+    newData: { aboutUs1Data: AboutUs1Data }
+  ) => {
+    onUpdate?.(componentId, newData);
+  };
+
+  const handleAboutUs2Update = (
+    componentId: string,
+    newData: { aboutUs2Data: AboutUs2Data }
+  ) => {
+    onUpdate?.(componentId, newData);
   };
 
   const handleRemove = () => {
@@ -293,7 +325,28 @@ export function ComponentRenderer({
             siteId={siteId}
           />
         );
-
+      case "about-us":
+        switch (component.style) {
+          case "style-2":
+            return (
+              <AboutUs2
+                data={component.aboutUs2Data || defaultAboutUs2Data}
+                isEditable={!isPreview}
+                onUpdate={handleAboutUs2Update}
+                componentId={component.id}
+              />
+            );
+          case "style-1":
+          default:
+            return (
+              <AboutUs1
+                data={component.aboutUs1Data || defaultAboutUs1Data}
+                isEditable={!isPreview}
+                onUpdate={handleAboutUs1Update}
+                componentId={component.id}
+              />
+            );
+        }
       case "text":
         if (isPreview) {
           return (

@@ -2,12 +2,10 @@
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { ComponentRenderer, Component } from "@/components/component-renders";
-import { HeroData } from "@/components/hero/hero";
-import { Hero2Data } from "@/components/hero/hero-2";
-import { FooterData } from "@/types/footer";
+
 import { Card, CardContent } from "@/components/ui/card";
 import { AlertCircle, FileX } from "lucide-react";
-import { Facebook, Twitter } from "lucide-react";
+
 import { ProductDetail } from "@/components/products/product-details";
 import { Product } from "@/types/product";
 

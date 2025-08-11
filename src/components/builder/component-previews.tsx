@@ -21,6 +21,8 @@ import { useProducts } from "@/hooks/use-products";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertTriangle } from "lucide-react";
+import { AboutUs1, defaultAboutUs1Data } from "@/components/about/about-us-1";
+import { AboutUs2, defaultAboutUs2Data } from "@/components/about/about-us-2";
 
 interface ComponentPreviewsProps {
   open: boolean;
@@ -184,11 +186,35 @@ export const ComponentPreviews: React.FC<ComponentPreviewsProps> = ({
       </div>
     );
   };
+  const renderAboutUsPreviews = () => {
+    return (
+      <div className="space-y-4">
+        <PreviewCard
+          title="About Us - Classic"
+          onClick={() => onSelect("about-us", "style-1")}
+        >
+          <div className="w-full max-w-4xl mx-auto scale-75 md:scale-90 lg:scale-100 transform pointer-events-none">
+            <AboutUs1 data={defaultAboutUs1Data} />
+          </div>
+        </PreviewCard>
 
+        <PreviewCard
+          title="About Us - Team Showcase"
+          onClick={() => onSelect("about-us", "style-2")}
+        >
+          <div className="w-full max-w-4xl mx-auto scale-75 md:scale-90 lg:scale-100 transform pointer-events-none">
+            <AboutUs2 data={defaultAboutUs2Data} />
+          </div>
+        </PreviewCard>
+      </div>
+    );
+  };
   const renderPreviews = () => {
     switch (componentType) {
       case "hero":
         return renderHeroPreviews();
+      case "about-us":
+        return renderAboutUsPreviews();
       case "products":
         return renderProductPreviews();
       default:
@@ -206,7 +232,8 @@ export const ComponentPreviews: React.FC<ComponentPreviewsProps> = ({
         <DialogHeader>
           <DialogTitle>{getDialogTitle()}</DialogTitle>
           <DialogDescription>
-            Select a style and click &apos;Add Component&apos; to add it to your page.
+            Select a style and click &apos;Add Component&apos; to add it to your
+            page.
           </DialogDescription>
         </DialogHeader>
         <ScrollArea className="h-[70vh] p-1">

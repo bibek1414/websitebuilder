@@ -13,7 +13,6 @@ import { SidebarNavigation } from "./sidebar-navigation";
 import { NavbarStylesDialog } from "./navbar-styles-dialog";
 import { FooterStylesDialog } from "@/components/footer/footer-styles-dialog";
 import ColorPicker from "@/components/color-picker";
-import { Component } from "@/components/component-renders";
 import { ComponentPreviews } from "./component-previews";
 
 interface ThemeSettings {

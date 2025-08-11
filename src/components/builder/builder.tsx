@@ -40,7 +40,8 @@ import { Facebook, Twitter } from "lucide-react";
 import { getMainSiteUrl } from "@/lib/env-config";
 import { PageNavigationHeader } from "./top-page-navigation";
 import { toast } from "sonner";
-
+import { defaultAboutUs1Data } from "@/components/about/about-us-1";
+import { defaultAboutUs2Data } from "@/components/about/about-us-2";
 interface ThemeColors {
   primary: string;
   primaryForeground: string;
@@ -432,6 +433,13 @@ function BuilderContent() {
         };
         newComponent.hero2Data = undefined;
       }
+    } else if (type === "about-us") {
+      if (style === "style-2") {
+        newComponent.aboutUs2Data = defaultAboutUs2Data;
+      } else {
+        newComponent.aboutUs1Data = defaultAboutUs1Data;
+      }
+      newComponent.content = ""; // Clear generic content
     } else if (type === "footer") {
       const defaultFooterData: FooterData = {
         companyName: "Your Company",

@@ -6,6 +6,7 @@ import {
   ShoppingBag,
   Type,
   LayoutTemplate,
+  Users,
 } from "lucide-react";
 
 interface SidebarNavigationProps {
@@ -29,6 +30,12 @@ const componentCategories = [
     name: "Hero Sections",
     description: "Large banners for the top of your page.",
     icon: LayoutTemplate,
+  },
+  {
+    type: "about-us",
+    name: "About Sections",
+    description: "Share your story and introduce your team.",
+    icon: Users,
   },
   {
     type: "products",
