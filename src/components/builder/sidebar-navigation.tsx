@@ -1,25 +1,17 @@
 import React from "react";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
-  Plus,
-  Trash2,
   Navigation,
   Layout,
   ShoppingBag,
-  Type as TypeIcon,
+  Type,
   LayoutTemplate,
 } from "lucide-react";
-import { Component } from "@/components/component-renders";
 
 interface SidebarNavigationProps {
-  pages: { [key: string]: { components: Component[] } };
   currentPage: string;
   hasNavbar: boolean;
   hasFooter: boolean;
-  onPageChange: (page: string) => void;
-  onPageAdd: () => void;
-  onPageDelete: (pageName: string) => void;
   onNavbarClick: () => void;
   onFooterClick: () => void;
   onComponentCategoryClick: (type: string) => void;
@@ -42,61 +34,20 @@ const componentCategories = [
     type: "text",
     name: "Text Block",
     description: "A simple text block for content.",
-    icon: TypeIcon,
+    icon: Type,
   },
 ];
 
 export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
-  pages,
   currentPage,
   hasNavbar,
   hasFooter,
-  onPageChange,
-  onPageAdd,
-  onPageDelete,
   onNavbarClick,
   onFooterClick,
   onComponentCategoryClick,
 }) => {
   return (
     <>
-      <div className="p-4 border-b flex-shrink-0">
-        <h3 className="font-semibold mb-2">Pages</h3>
-        <div className="max-h-32 overflow-y-auto">
-          {Object.keys(pages).map((pageName) => (
-            <div key={pageName} className="flex items-center mb-1">
-              <Button
-                variant={currentPage === pageName ? "secondary" : "ghost"}
-                size="sm"
-                onClick={() => onPageChange(pageName)}
-                className="flex-1 justify-start capitalize h-8"
-              >
-                {pageName}
-              </Button>
-              {Object.keys(pages).length > 1 && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => onPageDelete(pageName)}
-                  className="ml-2 h-6 w-6 text-destructive hover:text-destructive/80"
-                >
-                  <Trash2 className="h-3 w-3" />
-                </Button>
-              )}
-            </div>
-          ))}
-        </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onPageAdd}
-          className="mt-2 h-8 text-primary hover:text-primary/80"
-        >
-          <Plus className="h-3 w-3 mr-1" />
-          Add Page
-        </Button>
-      </div>
-
       <div className="p-4 border-b flex-shrink-0">
         <h3 className="font-semibold mb-3">Site Structure</h3>
         <div className="space-y-2">
@@ -139,6 +90,7 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
           </Card>
         </div>
       </div>
+      
       <div className="p-4 flex-1 overflow-y-auto">
         <h3 className="font-semibold mb-2">Add Components</h3>
         {componentCategories.map((category) => {

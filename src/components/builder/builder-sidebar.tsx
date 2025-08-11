@@ -35,16 +35,12 @@ interface ThemeSettings {
 
 interface BuilderSidebarProps {
   siteName: string | null;
-  pages: { [key: string]: { components: Component[] } };
   currentPage: string;
   theme?: ThemeSettings;
   hasNavbar: boolean;
   hasFooter: boolean;
   onBackToDashboard: () => void;
   onPreviewSite: () => void;
-  onPageChange: (page: string) => void;
-  onPageAdd: () => void;
-  onPageDelete: (pageName: string) => void;
   onNavbarStyleSelect: (style: string) => void;
   onFooterStyleSelect: (style: string) => void;
   onComponentClick: (type: string, style?: string) => void;
@@ -53,16 +49,12 @@ interface BuilderSidebarProps {
 
 export const BuilderSidebar: React.FC<BuilderSidebarProps> = ({
   siteName,
-  pages,
   currentPage,
   theme,
   hasNavbar,
   hasFooter,
   onBackToDashboard,
   onPreviewSite,
-  onPageChange,
-  onPageAdd,
-  onPageDelete,
   onNavbarStyleSelect,
   onFooterStyleSelect,
   onComponentClick,
@@ -98,7 +90,7 @@ export const BuilderSidebar: React.FC<BuilderSidebarProps> = ({
   };
 
   return (
-    <div className="w-90 bg-card shadow-lg flex flex-col border-r">
+    <div className="w-82 bg-card shadow-lg flex flex-col border-r">
       <div className="p-4 border-b">
         <h2 className="text-lg font-bold truncate">
           Editing: {siteName || "Untitled"}
@@ -152,13 +144,9 @@ export const BuilderSidebar: React.FC<BuilderSidebarProps> = ({
       </div>
 
       <SidebarNavigation
-        pages={pages}
         currentPage={currentPage}
         hasNavbar={hasNavbar}
         hasFooter={hasFooter}
-        onPageChange={onPageChange}
-        onPageAdd={onPageAdd}
-        onPageDelete={onPageDelete}
         onNavbarClick={handleNavbarClick}
         onFooterClick={handleFooterClick}
         onComponentCategoryClick={handleComponentCategoryClick}

@@ -22,13 +22,25 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Plus, Edit, Eye, Trash2 } from "lucide-react";
+import { Plus, Edit, Eye, Trash2, ExternalLink } from "lucide-react";
+
+// Import your env config
+import { buildSiteUrl, getMainSiteUrl, envConfig } from "@/lib/env-config";
 
 interface Site {
   id: string;
   name: string;
   createdAt: string;
 }
+
+// Helper function to create URL-friendly slug from site name
+const createSiteSlug = (siteName: string): string => {
+  return siteName
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .substring(0, 50); // Limit length for practical subdomain usage
+};
 
 export default function HomePage() {
   const [sites, setSites] = useState<Site[]>([]);
@@ -75,20 +87,57 @@ export default function HomePage() {
     }
   };
 
-  const openSite = (siteName: string, siteId: string) => {
-    router.push(`/builder?site=${siteId}&name=${encodeURIComponent(siteName)}`);
+  const openSiteBuilder = (siteName: string, siteId: string) => {
+    const siteSlug = createSiteSlug(siteName);
+
+    if (envConfig.enableSubdomainRouting) {
+      // For subdomain routing, navigate to subdomain.domain.com/builder (clean URL)
+      const builderUrl = `${envConfig.protocol}://${siteSlug}.${
+        envConfig.baseDomain
+      }/builder?site=${siteId}&name=${encodeURIComponent(siteName)}`;
+      window.location.href = builderUrl;
+    } else {
+      // Fallback to query parameter routing
+      router.push(
+        `/builder?site=${siteId}&name=${encodeURIComponent(siteName)}`
+      );
+    }
   };
 
-  const previewSite = (siteId: string) => {
-    window.open(`/preview?site=${siteId}`, "_blank");
+  const previewSite = (siteName: string, siteId: string) => {
+    const siteSlug = createSiteSlug(siteName);
+
+    if (envConfig.enableSubdomainRouting) {
+      // For subdomain routing, open subdomain.domain.com
+      const previewUrl = `${envConfig.protocol}://${siteSlug}.${
+        envConfig.baseDomain
+      }/preview?site=${siteId}&name=${encodeURIComponent(siteName)}`;
+      window.open(previewUrl, "_blank");
+    } else {
+      // Fallback to query parameter routing
+      window.open(
+        `/preview?site=${siteId}&name=${encodeURIComponent(siteName)}`,
+        "_blank"
+      );
+    }
+  };
+
+  const getSiteUrl = (siteName: string) => {
+    if (envConfig.enableSubdomainRouting) {
+      const siteSlug = createSiteSlug(siteName);
+      return `${envConfig.protocol}://${siteSlug}.${envConfig.baseDomain}`;
+    }
+    return null;
   };
 
   return (
     <div className="min-h-screen bg-background p-8">
       <div className="max-w-6xl mx-auto">
-        <h1 className="text-3xl font-bold mb-8 text-foreground">
-          Website Builder
-        </h1>
+        <div className="flex items-center justify-between mb-8">
+          <h1 className="text-3xl font-bold text-foreground">
+            Website Builder
+          </h1>
+        </div>
 
         <Dialog open={showModal} onOpenChange={setShowModal}>
           <DialogTrigger asChild>
@@ -102,14 +151,21 @@ export default function HomePage() {
               <DialogTitle>Create New Site</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
-              <Input
-                type="text"
-                value={newSiteName}
-                onChange={(e) => setNewSiteName(e.target.value)}
-                onKeyPress={(e) => e.key === "Enter" && createSite()}
-                placeholder="Enter site name"
-                autoFocus
-              />
+              <div>
+                <Input
+                  type="text"
+                  value={newSiteName}
+                  onChange={(e) => setNewSiteName(e.target.value)}
+                  onKeyPress={(e) => e.key === "Enter" && createSite()}
+                  placeholder="Enter site name"
+                  autoFocus
+                />
+                {envConfig.enableSubdomainRouting && newSiteName && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    URL: {createSiteSlug(newSiteName)}.{envConfig.baseDomain}
+                  </p>
+                )}
+              </div>
               <div className="flex gap-2">
                 <Button
                   onClick={createSite}
@@ -134,67 +190,90 @@ export default function HomePage() {
         </Dialog>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {sites.map((site) => (
-            <Card key={site.id} className="hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <CardTitle className="text-xl">{site.name}</CardTitle>
-                <p className="text-muted-foreground text-sm">
-                  Created: {new Date(site.createdAt).toLocaleDateString()}
-                </p>
-              </CardHeader>
-              <CardContent>
-                <div className="flex gap-2 flex-wrap">
-                  <Button
-                    size="sm"
-                    onClick={() => openSite(site.name, site.id)}
-                    className="flex-1"
-                  >
-                    <Edit className="w-4 h-4 mr-1" />
-                    Edit
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    onClick={() => previewSite(site.id)}
-                    className="flex-1"
-                  >
-                    <Eye className="w-4 h-4 mr-1" />
-                    Preview
-                  </Button>
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button
-                        size="sm"
-                        variant="destructive"
-                        className="flex-1"
+          {sites.map((site) => {
+            const siteUrl = getSiteUrl(site.name);
+
+            return (
+              <Card key={site.id} className="hover:shadow-lg transition-shadow">
+                <CardHeader>
+                  <CardTitle className="text-xl flex items-center gap-2">
+                    {site.name}
+                    {siteUrl && (
+                      <a
+                        href={siteUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-muted-foreground hover:text-foreground transition-colors"
                       >
-                        <Trash2 className="w-4 h-4 mr-1" />
-                        Delete
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          This action cannot be undone. This will permanently
-                          delete your site &apos;{site.name}&apos;.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction
-                          onClick={() => deleteSite(site.id)}
-                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        <ExternalLink className="w-4 h-4" />
+                      </a>
+                    )}
+                  </CardTitle>
+                  <div className="space-y-1">
+                    <p className="text-muted-foreground text-sm">
+                      Created: {new Date(site.createdAt).toLocaleDateString()}
+                    </p>
+                    {siteUrl && (
+                      <p className="text-xs text-blue-600 font-mono break-all">
+                        {siteUrl.replace(/^https?:\/\//, "")}
+                      </p>
+                    )}
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex gap-2 flex-wrap">
+                    <Button
+                      size="sm"
+                      onClick={() => openSiteBuilder(site.name, site.id)}
+                      className="flex-1"
+                    >
+                      <Edit className="w-4 h-4 mr-1" />
+                      Edit
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => previewSite(site.name, site.id)}
+                      className="flex-1"
+                    >
+                      <Eye className="w-4 h-4 mr-1" />
+                      Preview
+                    </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          className="flex-1"
                         >
+                          <Trash2 className="w-4 h-4 mr-1" />
                           Delete
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This action cannot be undone. This will permanently
+                            delete your site &apos;{site.name}&apos;.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => deleteSite(site.id)}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                          >
+                            Delete
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
 
         {sites.length === 0 && (

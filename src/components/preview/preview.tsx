@@ -11,9 +11,6 @@ import { Facebook, Twitter } from "lucide-react";
 import { ProductDetail } from "@/components/products/product-details";
 import { Product } from "@/types/product";
 
-
-
-
 interface ThemeColors {
   primary: string;
   primaryForeground: string;
@@ -46,34 +43,105 @@ interface SiteData {
   products?: Product[];
 }
 
-// Define the shape of raw component data from localStorage
-interface RawComponentData {
-  id: string;
-  type: string;
-  style?: string;
-  content?: string;
-  navbarData?: {
-    logoText?: string;
-    links?: Array<{ id: string; text: string; href?: string }>;
-    buttons?: Array<{
-      id: string;
-      text: string;
-      variant: "primary" | "secondary" | "outline";
-      href?: string;
-    }>;
-  };
-  heroData?: HeroData;
-  hero2Data?: Hero2Data;
-  footerData?: FooterData;
-  productsData?: {
-    products?: Product[];
-    layout?: string;
-    showFilters?: boolean;
-    categories?: string[];
-  };
+class PreviewStorageManager {
+  private siteId: string;
+
+  constructor(siteId: string) {
+    this.siteId = siteId;
+  }
+
+  loadComponent(componentId: string): Component | null {
+    if (typeof window !== "undefined") {
+      const key = `site_${this.siteId}_component_${componentId}`;
+      const stored = localStorage.getItem(key);
+      if (stored) {
+        try {
+          return JSON.parse(stored);
+        } catch (error) {
+          return null;
+        }
+      }
+    }
+    return null;
+  }
+
+  loadPageStructure(pageName: string): string[] {
+    if (typeof window !== "undefined") {
+      const key = `site_${this.siteId}_page_${pageName}`;
+      const stored = localStorage.getItem(key);
+      if (stored) {
+        try {
+          const data = JSON.parse(stored);
+          return data.componentIds || [];
+        } catch (error) {
+          return [];
+        }
+      }
+    }
+    return [];
+  }
+
+  loadPageComponents(pageName: string): Component[] {
+    const componentIds = this.loadPageStructure(pageName);
+    const components: Component[] = [];
+
+    for (const id of componentIds) {
+      const component = this.loadComponent(id);
+      if (component) {
+        components.push(component);
+      }
+    }
+
+    return components;
+  }
+
+  loadTheme(): ThemeSettings | null {
+    if (typeof window !== "undefined") {
+      const key = `site_${this.siteId}_theme`;
+      const stored = localStorage.getItem(key);
+      if (stored) {
+        try {
+          return JSON.parse(stored);
+        } catch (error) {
+          return null;
+        }
+      }
+    }
+    return null;
+  }
+
+  loadSiteMetadata(): { pages: string[]; title?: string } {
+    if (typeof window !== "undefined") {
+      const key = `site_${this.siteId}_metadata`;
+      const stored = localStorage.getItem(key);
+      if (stored) {
+        try {
+          const data = JSON.parse(stored);
+          return { pages: data.pages || ["home"], title: data.title };
+        } catch (error) {
+          return { pages: ["home"] };
+        }
+      }
+    }
+    return { pages: ["home"] };
+  }
+
+  loadLegacySiteData(): SiteData | null {
+    if (typeof window !== "undefined") {
+      const key = `site_${this.siteId}`;
+      const stored = localStorage.getItem(key);
+      if (stored) {
+        try {
+          return JSON.parse(stored);
+        } catch (error) {
+          return null;
+        }
+      }
+    }
+    return null;
+  }
 }
 
-// Available fonts for fallback reference
 const availableFonts = [
   {
     name: "Inter",
@@ -97,7 +165,6 @@ const availableFonts = [
   },
 ];
 
-// Function to load Google Fonts
 const loadGoogleFonts = () => {
   if (typeof window === "undefined") return;
 
@@ -111,27 +178,14 @@ const loadGoogleFonts = () => {
     "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto:wght@400;500;700&family=Playfair+Display:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap";
   link.rel = "stylesheet";
   link.setAttribute("data-font-loader", "google-fonts");
-
-  link.onload = () => {
-    console.log("Google Fonts loaded successfully in preview");
-  };
-
-  link.onerror = () => {
-    console.warn(
-      "Failed to load Google Fonts in preview, using fallback fonts"
-    );
-  };
-
   document.head.appendChild(link);
 };
 
-// Function to apply theme settings (colors and fonts)
 const applyThemeSettings = (settings: ThemeSettings) => {
   if (typeof window === "undefined") return;
 
   const root = document.documentElement;
 
-  // Apply colors
   Object.entries(settings).forEach(([key, value]) => {
     if (key !== "fontFamily") {
       const cssVar = `--${key.replace(/([A-Z])/g, "-$1").toLowerCase()}`;
@@ -139,9 +193,7 @@ const applyThemeSettings = (settings: ThemeSettings) => {
     }
   });
 
-  // Apply font
   if (settings.fontFamily) {
-    // Ensure Google Fonts are loaded
     loadGoogleFonts();
 
     const selectedFontObj = availableFonts.find(
@@ -155,105 +207,6 @@ const applyThemeSettings = (settings: ThemeSettings) => {
   }
 };
 
-function normalizeComponent(component: RawComponentData): Component {
-  const normalized: Component = {
-    id: component.id,
-    type: component.type,
-    style: component.style,
-    content: component.content || "",
-    navbarData: component.navbarData,
-    heroData: component.heroData,
-    hero2Data: component.hero2Data,
-    footerData: component.footerData,
-    productsData: component.productsData,
-  };
-
-  // Ensure hero components have proper data structure
-  if (normalized.type === "hero" && !normalized.heroData) {
-    const defaultHeroData: HeroData = {
-      title: "Welcome to Our Amazing Platform",
-      subtitle: "Build Something Great",
-      description:
-        "Create beautiful, responsive websites with our intuitive drag-and-drop builder. No coding required.",
-      layout: "center",
-      backgroundType: "gradient",
-      backgroundColor: "primary",
-      gradientFrom: "primary",
-      gradientTo: "secondary",
-      textColor: "primary-foreground",
-      buttons: [
-        { id: "1", text: "Get Started", variant: "primary", href: "#" },
-        { id: "2", text: "Learn More", variant: "outline", href: "#" },
-      ],
-      showImage: false,
-      imageUrl: "",
-      imageAlt: "Hero image",
-    };
-    normalized.heroData = defaultHeroData;
-  }
-
-  // Ensure footer components have proper data structure
-  if (normalized.type === "footer" && !normalized.footerData) {
-    const defaultFooterData: FooterData = {
-      companyName: "Your Company",
-      description:
-        "Building amazing experiences for our customers with innovative solutions and exceptional service.",
-      sections: [
-        {
-          id: "1",
-          title: "Company",
-          links: [
-            { id: "1", text: "About Us", href: "#about" },
-            { id: "2", text: "Our Team", href: "#team" },
-            { id: "3", text: "Careers", href: "#careers" },
-            { id: "4", text: "Contact", href: "#contact" },
-          ],
-        },
-        {
-          id: "2",
-          title: "Services",
-          links: [
-            { id: "1", text: "Web Design", href: "#web-design" },
-            { id: "2", text: "Development", href: "#development" },
-            { id: "3", text: "Consulting", href: "#consulting" },
-            { id: "4", text: "Support", href: "#support" },
-          ],
-        },
-      ],
-      socialLinks: [
-        { id: "1", platform: "Facebook", href: "#", icon: Facebook },
-        { id: "2", platform: "Twitter", href: "#", icon: Twitter },
-      ],
-      contactInfo: {
-        email: "hello@company.com",
-        phone: "+1 (555) 123-4567",
-        address: "123 Business St, City, State 12345",
-      },
-      newsletter: {
-        enabled: true,
-        title: "Stay Updated",
-        description:
-          "Subscribe to our newsletter for the latest updates and news.",
-      },
-      copyright: "© 2025 Your Company. All rights reserved.",
-    };
-    normalized.footerData = defaultFooterData;
-  }
-
-  // Ensure products components have proper data structure
-  if (normalized.type === "products" && !normalized.productsData) {
-    normalized.productsData = {
-      products: [],
-      layout: "grid",
-      showFilters: true,
-      categories: [],
-    };
-  }
-
-  return normalized;
-}
-
-// Function to convert page name to URL-friendly slug
 const pageNameToSlug = (pageName: string): string => {
   return pageName
     .toLowerCase()
@@ -261,15 +214,12 @@ const pageNameToSlug = (pageName: string): string => {
     .replace(/[^a-z0-9-]/g, "");
 };
 
-// Function to convert URL slug back to page name
 const slugToPageName = (
   slug: string,
   pages: { [key: string]: PageData }
 ): string => {
-  // First try exact match
   if (pages[slug]) return slug;
 
-  // Then try to find by converted slug
   const pageEntries = Object.keys(pages);
   const foundPage = pageEntries.find(
     (pageName) => pageNameToSlug(pageName) === slug
@@ -278,7 +228,6 @@ const slugToPageName = (
   return foundPage || "home";
 };
 
-// Enhanced ComponentRenderer that updates navbar links
 interface EnhancedComponentRendererProps {
   component: Component;
   siteId: string;
@@ -294,12 +243,10 @@ function EnhancedComponentRenderer({
   pages,
   siteData,
 }: EnhancedComponentRendererProps) {
-  // Clone the component and update navbar links if it's a navbar
   const enhancedComponent = { ...component };
 
   if (component.type === "navbar" && component.navbarData?.links) {
     const updatedLinks = component.navbarData.links.map((link) => {
-      // Check if this link corresponds to a page
       const linkText = link.text.toLowerCase();
       const matchingPage = Object.keys(pages).find(
         (pageName) =>
@@ -308,7 +255,6 @@ function EnhancedComponentRenderer({
       );
 
       if (matchingPage) {
-        // Update href to use proper navigation
         const slug = pageNameToSlug(matchingPage);
         return {
           ...link,
@@ -325,7 +271,6 @@ function EnhancedComponentRenderer({
     };
   }
 
-  // For products components, ensure they have access to site products data
   if (component.type === "products" && siteData?.products) {
     enhancedComponent.productsData = {
       ...component.productsData,
@@ -354,73 +299,61 @@ function PreviewContent() {
   const [siteData, setSiteData] = useState<SiteData>({ pages: {} });
   const [currentPage, setCurrentPage] = useState("home");
   const [isLoading, setIsLoading] = useState(true);
+  const [storageManager, setStorageManager] =
+    useState<PreviewStorageManager | null>(null);
 
   useEffect(() => {
     if (siteId && typeof window !== "undefined") {
-      const savedSite = localStorage.getItem(`site_${siteId}`);
-      if (savedSite) {
-        try {
-          const parsedData = JSON.parse(savedSite) as {
-            pages?: { [key: string]: { components?: RawComponentData[] } };
-            theme?: ThemeSettings;
-            products?: Product[];
-          };
-          const normalizedData: SiteData = { pages: {} };
+      const manager = new PreviewStorageManager(siteId);
+      setStorageManager(manager);
 
-          // Process pages
-          Object.keys(parsedData.pages || {}).forEach((pageName) => {
-            const page = parsedData.pages?.[pageName];
-            if (page && Array.isArray(page.components)) {
-              normalizedData.pages[pageName] = {
-                components: page.components.map(normalizeComponent),
-              };
-            }
-          });
+      let normalizedData: SiteData = { pages: {} };
 
-          // Include theme data
-          if (parsedData.theme) {
-            normalizedData.theme = parsedData.theme;
-          }
+      const metadata = manager.loadSiteMetadata();
+      const theme = manager.loadTheme();
 
-          // Include products data
-          if (parsedData.products) {
-            normalizedData.products = parsedData.products;
-          }
-
-          setSiteData(normalizedData);
-
-          // Apply theme settings (colors and fonts) if they exist
-          if (parsedData.theme) {
-            applyThemeSettings(parsedData.theme);
-          } else {
-            // Load Google Fonts even if no custom theme is set
-            loadGoogleFonts();
-          }
-
-          // Set current page based on URL parameter
-          if (pageParam) {
-            const targetPage = slugToPageName(pageParam, normalizedData.pages);
-            setCurrentPage(targetPage);
-          } else if (
-            !normalizedData.pages.home &&
-            Object.keys(normalizedData.pages).length > 0
-          ) {
-            setCurrentPage(Object.keys(normalizedData.pages)[0]);
-          }
-        } catch (error) {
-          console.error("Error parsing site data:", error);
-          // Load Google Fonts even on error
-          loadGoogleFonts();
+      if (metadata.pages.length > 0) {
+        const pagesData: { [key: string]: PageData } = {};
+        for (const pageName of metadata.pages) {
+          const components = manager.loadPageComponents(pageName);
+          pagesData[pageName] = { components };
         }
+
+        normalizedData = {
+          pages: pagesData,
+          theme: theme || undefined,
+        };
       } else {
-        // Load Google Fonts even if no saved site
+        const legacyData = manager.loadLegacySiteData();
+        if (legacyData) {
+          normalizedData = legacyData;
+        } else {
+          normalizedData = { pages: { home: { components: [] } } };
+        }
+      }
+
+      setSiteData(normalizedData);
+
+      if (normalizedData.theme) {
+        applyThemeSettings(normalizedData.theme);
+      } else {
         loadGoogleFonts();
       }
+
+      if (pageParam) {
+        const targetPage = slugToPageName(pageParam, normalizedData.pages);
+        setCurrentPage(targetPage);
+      } else if (
+        !normalizedData.pages.home &&
+        Object.keys(normalizedData.pages).length > 0
+      ) {
+        setCurrentPage(Object.keys(normalizedData.pages)[0]);
+      }
+
       setIsLoading(false);
     }
   }, [siteId, pageParam]);
 
-  // Handle navigation when page parameter changes
   useEffect(() => {
     if (pageParam && siteData.pages) {
       const targetPage = slugToPageName(pageParam, siteData.pages);
@@ -443,7 +376,7 @@ function PreviewContent() {
           <CardContent className="pt-6">
             <AlertCircle className="h-16 w-16 mx-auto text-destructive mb-4" />
             <h1 className="text-2xl font-bold mb-2">Site Not Found</h1>
-            <p className="text-muted-foreground">
+            <p className="text-muted-foreground mb-4">
               The requested site could not be loaded.
             </p>
           </CardContent>
@@ -452,7 +385,6 @@ function PreviewContent() {
     );
   }
 
-  // Determine which page to render
   const pageToRender = productId ? "home" : currentPage;
   const components = siteData.pages[pageToRender]?.components || [];
   const navbar = components.find((c) => c.type === "navbar");
@@ -463,7 +395,6 @@ function PreviewContent() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Render navbar if it exists */}
       {navbar && (
         <EnhancedComponentRenderer
           component={navbar}
@@ -503,7 +434,6 @@ function PreviewContent() {
         )}
       </main>
 
-      {/* Render footer if it exists */}
       {footer && (
         <EnhancedComponentRenderer
           component={footer}
@@ -514,7 +444,6 @@ function PreviewContent() {
         />
       )}
 
-      {/* Default footer if no footer component */}
       {!footer && (
         <footer className="bg-muted border-t py-4 text-center text-sm text-muted-foreground">
           <div className="container mx-auto px-4">
