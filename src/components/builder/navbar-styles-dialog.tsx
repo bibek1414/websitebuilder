@@ -75,7 +75,7 @@ const navbarStyles: NavbarStyle[] = [
     name: "Standard",
     description: "Logo left, links and actions right",
     preview: (
-      <div className="p-4 border rounded-md bg-background w-80">
+      <div className="p-4 border rounded-md bg-background">
         <div className="flex justify-between items-center">
           <div className="font-bold text-xs">Brand</div>
           <div className="flex items-center gap-3 text-xs">
@@ -97,7 +97,7 @@ const navbarStyles: NavbarStyle[] = [
     name: "Centered",
     description: "Logo left, links center, actions right",
     preview: (
-      <div className="p-4 border rounded-md bg-primary text-primary-foreground w-80">
+      <div className="p-4 border rounded-md bg-primary text-primary-foreground ">
         <div className="flex justify-between items-center">
           <div className="font-bold text-xs">Brand</div>
           <div className="flex items-center gap-3 text-xs">
@@ -117,7 +117,7 @@ const navbarStyles: NavbarStyle[] = [
     name: "Stacked",
     description: "Two-row layout with brand and action top",
     preview: (
-      <div className="p-4 border rounded-md bg-primary text-white w-80">
+      <div className="p-4 border rounded-md bg-primary text-white ">
         <div className="flex flex-col space-y-2">
           <div className="flex justify-between items-center">
             <div className="font-bold text-xs">Brand</div>
@@ -151,16 +151,16 @@ export const NavbarStylesDialog: React.FC<NavbarStylesDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl max-h-[80vh]  overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Choose Navbar Style</DialogTitle>
         </DialogHeader>
-        <div className="grid grid-cols-1 gap-6 p-4">
+        <div className="grid grid-cols-1 gap-6 ">
           {navbarStyles.map((navbarStyle) => (
             <div
               key={navbarStyle.id}
               onClick={(e) => handleStyleClick(navbarStyle.id, e)}
-              className="cursor-pointer"
+              className="cursor-pointer "
             >
               <DraggableNavbarPreview
                 id={`navbar-${navbarStyle.id}`}

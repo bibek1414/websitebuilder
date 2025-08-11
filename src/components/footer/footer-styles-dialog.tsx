@@ -1,6 +1,6 @@
 import React from "react";
 import { useDraggable } from "@dnd-kit/core";
-import { GripVertical, Mail, Phone, Facebook, Twitter } from "lucide-react";
+import { GripVertical } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -8,18 +8,25 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Card } from "@/components/ui/card";
+import { FooterStyle1 } from "./footer-style1";
+import { FooterStyle2 } from "./footer-style2";
+import { FooterData } from "@/types/footer";
 
 interface FooterStyle {
   id: string;
   name: string;
   description: string;
-  preview: React.ReactNode;
+  component: React.ComponentType<{
+    footerData: FooterData;
+    isEditable?: boolean;
+  }>;
 }
 
 interface FooterStylesDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onStyleSelect: (style: string) => void;
+  sampleFooterData?: FooterData;
 }
 
 const DraggableFooterPreview = ({
@@ -51,122 +58,93 @@ const DraggableFooterPreview = ({
     <div
       ref={setNodeRef}
       style={style}
-      className={isDragging ? "opacity-50" : ""}
+      className={`border rounded-lg overflow-hidden ${
+        isDragging ? "opacity-50" : ""
+      }`}
     >
-      <Card className="overflow-hidden cursor-grab active:cursor-grabbing hover:bg-accent transition-colors">
-        <div
-          className="p-2 bg-muted/40 flex items-center justify-center"
-          {...listeners}
-          {...attributes}
-        >
-          <GripVertical className="h-4 w-4 text-muted-foreground" />
-        </div>
-        <div className="scale-80 origin-top-left overflow-visible min-h-[120px] p-2">
+      {/* Footer Preview */}
+      <div className="bg-white">
+        <div className="">
           {children}
         </div>
-      </Card>
+      </div>
     </div>
   );
 };
+
+// Sample footer data for preview
+const getSampleFooterData = (): FooterData => ({
+  companyName: "Your Company",
+  description:
+    "Building amazing experiences with cutting-edge technology and innovative solutions for businesses worldwide.",
+  contactInfo: {
+    email: "hello@yourcompany.com",
+    phone: "+977 1234567890",
+    address: "123 Business Street, Kathmandu, Nepal",
+  },
+  socialLinks: [
+    {
+      id: "1",
+      platform: "Facebook",
+      href: "https://facebook.com",
+      icon: () => null,
+    },
+    {
+      id: "2",
+      platform: "Twitter",
+      href: "https://twitter.com",
+      icon: () => null,
+    },
+    {
+      id: "3",
+      platform: "LinkedIn",
+      href: "https://linkedin.com",
+      icon: () => null,
+    },
+  ],
+  sections: [
+    {
+      id: "1",
+      title: "Company",
+      links: [
+        { id: "1", text: "About Us", href: "/about" },
+        { id: "2", text: "Careers", href: "/careers" },
+        { id: "3", text: "Contact", href: "/contact" },
+      ],
+    },
+    {
+      id: "2",
+      title: "Services",
+      links: [
+        { id: "1", text: "Web Design", href: "/web-design" },
+        { id: "2", text: "Development", href: "/development" },
+        { id: "3", text: "Support", href: "/support" },
+      ],
+    },
+  ],
+  newsletter: {
+    enabled: true,
+    title: "Stay Updated",
+    description:
+      "Subscribe to our newsletter for the latest updates and insights.",
+  },
+  copyright: "© 2025 Your Company. All rights reserved.",
+});
 
 const footerStyles: FooterStyle[] = [
   {
     id: "style-1",
     name: "Clean & Minimal",
-    description: "Traditional footer layout with clean typography",
-    preview: (
-      <div className="p-4 border-t bg-background w-96">
-        <div className="grid grid-cols-3 gap-4 mb-4">
-          <div>
-            <div className="font-bold text-xs mb-2">Company Name</div>
-            <div className="text-xs text-muted-foreground mb-2">
-              Brief company description
-            </div>
-            <div className="flex items-center text-xs text-muted-foreground mb-1">
-              <Mail className="h-3 w-3 mr-1" />
-              email@company.com
-            </div>
-            <div className="flex items-center text-xs text-muted-foreground">
-              <Phone className="h-3 w-3 mr-1" />
-              +977 1234567890
-            </div>
-          </div>
-          <div>
-            <div className="font-semibold text-xs mb-2">Company</div>
-            <div className="space-y-1">
-              <div className="text-xs text-muted-foreground">About Us</div>
-              <div className="text-xs text-muted-foreground">Careers</div>
-              <div className="text-xs text-muted-foreground">Contact</div>
-            </div>
-          </div>
-          <div>
-            <div className="font-semibold text-xs mb-2">Services</div>
-            <div className="space-y-1">
-              <div className="text-xs text-muted-foreground">Web Design</div>
-              <div className="text-xs text-muted-foreground">Development</div>
-              <div className="text-xs text-muted-foreground">Support</div>
-            </div>
-          </div>
-        </div>
-        <div className="pt-2 border-t text-center">
-          <div className="text-xs text-muted-foreground">© 2025 Company. All rights reserved.</div>
-        </div>
-      </div>
-    ),
+    description:
+      "Traditional footer layout with clean typography and organized sections",
+    component: FooterStyle1,
   },
   {
     id: "style-2",
     name: "Card-Based Modern",
-    description: "Modern card-based design with visual separation",
-    preview: (
-      <div className="p-4 bg-muted/50 w-96">
-        <div className="bg-card p-4 rounded border mb-3">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <div className="inline-block px-2 py-1 bg-secondary text-secondary-foreground rounded text-xs mb-2">
-                Your Company
-              </div>
-              <div className="text-xs text-muted-foreground mb-2">
-                Building amazing experiences
-              </div>
-              <div className="flex gap-1">
-                <div className="p-1 border rounded">
-                  <Facebook className="h-3 w-3" />
-                </div>
-                <div className="p-1 border rounded">
-                  <Twitter className="h-3 w-3" />
-                </div>
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <div className="font-semibold text-xs mb-2">Company</div>
-                <div className="space-y-1">
-                  <div className="text-xs text-muted-foreground">About</div>
-                  <div className="text-xs text-muted-foreground">Team</div>
-                </div>
-              </div>
-              <div>
-                <div className="font-semibold text-xs mb-2">Services</div>
-                <div className="space-y-1">
-                  <div className="text-xs text-muted-foreground">Design</div>
-                  <div className="text-xs text-muted-foreground">Development</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="bg-card p-3 rounded border">
-          <div className="flex items-center justify-between text-xs">
-            <div className="flex items-center">
-              <Mail className="h-3 w-3 mr-1 text-primary" />
-              <span className="text-muted-foreground">hello@company.com</span>
-            </div>
-            <div className="text-muted-foreground">© 2025 Company</div>
-          </div>
-        </div>
-      </div>
-    ),
+    description:
+      "Modern card-based design with visual separation and contemporary styling",
+    component: FooterStyle2,
   },
 ];
 
@@ -174,7 +152,10 @@ export const FooterStylesDialog: React.FC<FooterStylesDialogProps> = ({
   open,
   onOpenChange,
   onStyleSelect,
+  sampleFooterData,
 }) => {
+  const footerData = sampleFooterData || getSampleFooterData();
+
   const handleStyleClick = (style: string, event: React.MouseEvent) => {
     if (!event.defaultPrevented) {
       onStyleSelect(style);
@@ -184,31 +165,47 @@ export const FooterStylesDialog: React.FC<FooterStylesDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-5xl max-h-[80vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Choose Footer Style</DialogTitle>
+      <DialogContent className="max-w-5xl max-h-[85vh] overflow-y-auto">
+        <DialogHeader className="pb-4">
+          <DialogTitle className="text-xl font-semibold">
+            Choose Footer Style
+          </DialogTitle>
+          <p className="text-sm text-gray-600 mt-1">
+            Select a footer style or drag to add to your page
+          </p>
         </DialogHeader>
-        <div className="grid grid-cols-1 gap-6 p-4">
-          {footerStyles.map((footerStyle) => (
-            <div
-              key={footerStyle.id}
-              onClick={(e) => handleStyleClick(footerStyle.id, e)}
-              className="cursor-pointer"
-            >
-              <DraggableFooterPreview
-                id={`footer-${footerStyle.id}`}
-                styleName={footerStyle.id}
-              >
-                {footerStyle.preview}
-              </DraggableFooterPreview>
-              <div className="mt-2">
-                <div className="text-sm font-medium">{footerStyle.name}</div>
-                <div className="text-xs text-muted-foreground">
-                  {footerStyle.description}
+
+        <div className="space-y-8">
+          {footerStyles.map((footerStyle) => {
+            const FooterComponent = footerStyle.component;
+            return (
+              <div key={footerStyle.id} className="space-y-4">
+                {/* Style Info */}
+                <div className="space-y-1">
+                  <h3 className="text-lg font-semibold">{footerStyle.name}</h3>
+                  <p className="text-sm text-gray-600">
+                    {footerStyle.description}
+                  </p>
+                </div>
+
+                {/* Footer Preview */}
+                <div
+                  onClick={(e) => handleStyleClick(footerStyle.id, e)}
+                  className="cursor-pointer"
+                >
+                  <DraggableFooterPreview
+                    id={`footer-${footerStyle.id}`}
+                    styleName={footerStyle.id}
+                  >
+                    <FooterComponent
+                      footerData={footerData}
+                      isEditable={false}
+                    />
+                  </DraggableFooterPreview>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </DialogContent>
     </Dialog>

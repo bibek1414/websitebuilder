@@ -90,11 +90,17 @@ export const BuilderSidebar: React.FC<BuilderSidebarProps> = ({
   };
 
   return (
-    <div className="w-82 bg-card shadow-lg flex flex-col border-r">
+    <div className="w-90 bg-card shadow-lg flex flex-col border-r">
       <div className="p-4 border-b">
-        <h2 className="text-lg font-bold truncate">
-          Editing: {siteName || "Untitled"}
+        <h2 className="grid grid-cols-2 items-center w-full">
+          <span className="text-lg font-bold truncate text-left">
+            NepDora<span className="text-primary font-bold">.</span>
+          </span>
+          <span className="text-lg font-bold truncate text-right">
+            {siteName || "Untitled"}
+          </span>
         </h2>
+
         <div className="flex gap-2 mt-2">
           <Button
             variant="ghost"

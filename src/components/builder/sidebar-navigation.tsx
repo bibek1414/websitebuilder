@@ -1,5 +1,5 @@
 import React from "react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import {
   Navigation,
   Layout,
@@ -15,6 +15,12 @@ interface SidebarNavigationProps {
   onNavbarClick: () => void;
   onFooterClick: () => void;
   onComponentCategoryClick: (type: string) => void;
+  // Add these props to get actual component counts
+  componentCounts?: {
+    hero?: number;
+    products?: number;
+    text?: number;
+  };
 }
 
 const componentCategories = [
@@ -45,77 +51,86 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
   onNavbarClick,
   onFooterClick,
   onComponentCategoryClick,
+  componentCounts = {},
 }) => {
   return (
-    <>
-      <div className="p-4 border-b flex-shrink-0">
-        <h3 className="font-semibold mb-3">Site Structure</h3>
-        <div className="space-y-2">
-          <Card
-            className={`cursor-pointer transition-colors ${
-              hasNavbar ? "bg-muted border-primary/50" : "hover:bg-accent"
-            }`}
+    <div className="flex flex-col h-full">
+      {/* Site Structure Section */}
+
+      <div className="py-3 border-b flex-shrink-0">
+        <div className="mb-3">
+          <Badge
+            variant="default"
+            className="bg-primary text-primary-foreground rounded-r-full px-4 py-3 text-lg font-medium"
+          >
+            Site Structure ( Basics )
+          </Badge>
+        </div>
+
+        <div className="space-y-1">
+          <div
+            className={`flex items-center justify-between px-3 py-2 rounded-md cursor-pointer transition-colors hover:bg-muted/30`}
             onClick={onNavbarClick}
           >
-            <CardContent className="p-3">
-              <div className="flex items-center">
-                <Navigation className="h-4 w-4 mr-2" />
-                <div>
-                  <div className="font-medium">Navbar</div>
-                  <div className="text-xs text-muted-foreground">
-                    {hasNavbar ? "Edit existing navbar" : "Add navigation bar"}
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+            <div className="flex items-center">
+              <Navigation className="h-4 w-4 mr-2 text-muted-foreground" />
+              <span className="text-sm font-medium ">Navbar</span>
+            </div>
+          </div>
 
-          <Card
-            className={`cursor-pointer transition-colors ${
-              hasFooter ? "bg-muted border-primary/50" : "hover:bg-accent"
-            }`}
+          <div
+            className={`flex items-center justify-between px-3 py-2 rounded-md cursor-pointer transition-colors hover:bg-secondary/30`}
             onClick={onFooterClick}
           >
-            <CardContent className="p-3">
-              <div className="flex items-center">
-                <Layout className="h-4 w-4 mr-2" />
-                <div>
-                  <div className="font-medium">Footer</div>
-                  <div className="text-xs text-muted-foreground">
-                    {hasFooter ? "Edit existing footer" : "Add footer section"}
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+            <div className="flex items-center">
+              <Layout className="h-4 w-4 mr-2 text-muted-foreground" />
+              <span className="text-sm font-medium">Footer</span>
+            </div>
+          </div>
         </div>
       </div>
-      
-      <div className="p-4 flex-1 overflow-y-auto">
-        <h3 className="font-semibold mb-2">Add Components</h3>
-        {componentCategories.map((category) => {
-          const Icon = category.icon;
-          return (
-            <Card
-              key={category.type}
-              className="mb-2 cursor-pointer hover:bg-accent transition-colors"
-              onClick={() => onComponentCategoryClick(category.type)}
-            >
-              <CardContent className="p-3">
+
+      {/* Site Components Section */}
+      <div className=" py-3 flex-1 overflow-y-auto">
+        <div className="mb-3">
+          <Badge
+            variant="default"
+            className="bg-primary text-primary-foreground rounded-r-full px-4 py-3 text-lg font-medium"
+          >
+            Site Components (Advanced)
+          </Badge>
+        </div>
+
+        <div className="space-y-1">
+          {componentCategories.map((category) => {
+            const Icon = category.icon;
+            const count =
+              componentCounts[category.type as keyof typeof componentCounts] ||
+              0;
+
+            return (
+              <div
+                key={category.type}
+                className="flex items-center justify-between px-3 py-2 rounded-md cursor-pointer hover:bg-secondary/30 transition-colors"
+                onClick={() => onComponentCategoryClick(category.type)}
+              >
                 <div className="flex items-center">
-                  <Icon className="h-5 w-5 mr-3 text-muted-foreground" />
-                  <div>
-                    <div className="font-medium">{category.name}</div>
-                    <div className="text-xs text-muted-foreground mt-1">
-                      {category.description}
-                    </div>
-                  </div>
+                  <Icon className="h-4 w-4 mr-2 text-muted-foreground" />
+                  <span className="text-sm font-medium">{category.name}</span>
                 </div>
-              </CardContent>
-            </Card>
-          );
-        })}
+                {count > 0 && (
+                  <Badge
+                    variant="secondary"
+                    className="bg-secondary/80 text-secondary-foreground text-xs px-2 py-0 h-5 min-w-[20px] flex items-center justify-center rounded-full"
+                  >
+                    {count}
+                  </Badge>
+                )}
+              </div>
+            );
+          })}
+        </div>
       </div>
-    </>
+    </div>
   );
 };

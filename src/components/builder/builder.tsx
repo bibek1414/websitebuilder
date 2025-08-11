@@ -647,7 +647,10 @@ function BuilderContent() {
   }
 
   const currentComponents = siteData.pages[currentPage]?.components || [];
-
+  const handleBackToDashboard = () => {
+    const mainUrl = getMainSiteUrl();
+    window.location.href = mainUrl;
+  };
   return (
     <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
       <div className="flex h-screen bg-background text-foreground">
@@ -658,7 +661,7 @@ function BuilderContent() {
           theme={siteData.theme}
           hasNavbar={hasNavbar}
           hasFooter={hasFooter}
-          onBackToDashboard={() => router.push("/")}
+          onBackToDashboard={handleBackToDashboard}
           onPreviewSite={previewSite}
           onNavbarStyleSelect={handleNavbarStyleSelect}
           onFooterStyleSelect={handleFooterStyleSelect}
@@ -779,7 +782,8 @@ function BuilderContent() {
             <AlertDialogHeader>
               <AlertDialogTitle>Are you sure?</AlertDialogTitle>
               <AlertDialogDescription>
-                This action cannot be undone. This will permanently delete the &apos;
+                This action cannot be undone. This will permanently delete the
+                &apos;
                 {pageToDelete}&apos; page and all its components.
               </AlertDialogDescription>
             </AlertDialogHeader>
