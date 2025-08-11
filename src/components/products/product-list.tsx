@@ -134,8 +134,8 @@ export const ProductsList: React.FC<ProductsListProps> = ({
 
   
   return (
-    <div className="py-8 md:py-12">
-      <div className="container mx-auto px-4">
+    <div className="py-8 md:py-12 ">
+      <div className="container mx-auto px-4 max-w-7xl">
         <h2 className="text-3xl font-bold tracking-tight text-center mb-8 text-foreground">
           {title}
         </h2>

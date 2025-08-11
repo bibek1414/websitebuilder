@@ -71,7 +71,7 @@ const convertUnsplashUrl = (
   return url;
 };
 
-const defaultHeroData: HeroData = {
+export const defaultHeroData: HeroData = {
   title: "Welcome to Our Amazing Platform",
   subtitle: "Build Something Great",
   description:

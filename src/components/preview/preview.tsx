@@ -476,7 +476,7 @@ function PreviewContent() {
 
       <main className="flex-grow">
         {productId ? (
-          <ProductDetail productId={productId} />
+          <ProductDetail productId={productId} siteId={siteId} />
         ) : mainComponents.length === 0 ? (
           <div className="flex items-center justify-center h-96">
             <Card className="text-center p-8">

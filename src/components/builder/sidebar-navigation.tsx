@@ -1,7 +1,15 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Plus, Trash2, Navigation, Layout, ShoppingBag } from "lucide-react";
+import {
+  Plus,
+  Trash2,
+  Navigation,
+  Layout,
+  ShoppingBag,
+  Type as TypeIcon,
+  LayoutTemplate,
+} from "lucide-react";
 import { Component } from "@/components/component-renders";
 
 interface SidebarNavigationProps {
@@ -14,45 +22,27 @@ interface SidebarNavigationProps {
   onPageDelete: (pageName: string) => void;
   onNavbarClick: () => void;
   onFooterClick: () => void;
-  onComponentClick: (type: string, style?: string) => void;
+  onComponentCategoryClick: (type: string) => void;
 }
 
-const componentTemplates = [
+const componentCategories = [
   {
     type: "hero",
-    style: "style-1",
-    name: "Hero Section - Basic",
-    description: "A large, attention-grabbing section with a centered layout.",
-  },
-  {
-    type: "hero",
-    style: "style-2",
-    name: "Hero Section - Advanced",
-    description:
-      "A customizable hero with background image/slider and flexible text.",
+    name: "Hero Sections",
+    description: "Large banners for the top of your page.",
+    icon: LayoutTemplate,
   },
   {
     type: "products",
-    style: "style-1",
-    name: "Product Grid - Classic",
-    description: "A classic grid layout for showcasing products.",
-  },
-  {
-    type: "products",
-    style: "style-2",
-    name: "Product Grid - Modern",
-    description: "A modern card grid with more details and hover effects.",
-  },
-  {
-    type: "products",
-    style: "style-3",
-    name: "Product List - Horizontal",
-    description: "A list-style layout for products, ideal for catalogs.",
+    name: "Product Displays",
+    description: "Showcase products in various layouts.",
+    icon: ShoppingBag,
   },
   {
     type: "text",
     name: "Text Block",
     description: "A simple text block for content.",
+    icon: TypeIcon,
   },
 ];
 
@@ -66,12 +56,8 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
   onPageDelete,
   onNavbarClick,
   onFooterClick,
-  onComponentClick,
+  onComponentCategoryClick,
 }) => {
-  const handleComponentClick = (template: (typeof componentTemplates)[0]) => {
-    onComponentClick(template.type, template.style);
-  };
-
   return (
     <>
       <div className="p-4 border-b flex-shrink-0">
@@ -154,21 +140,29 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
         </div>
       </div>
       <div className="p-4 flex-1 overflow-y-auto">
-        <h3 className="font-semibold mb-2">Components</h3>
-        {componentTemplates.map((template) => (
-          <Card
-            key={`${template.type}-${template.style || "default"}`}
-            className="mb-2 cursor-pointer hover:bg-accent transition-colors"
-            onClick={() => handleComponentClick(template)}
-          >
-            <CardContent className="p-3">
-              <div className="font-medium capitalize">{template.name}</div>
-              <div className="text-xs text-muted-foreground mt-1">
-                {template.description}
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+        <h3 className="font-semibold mb-2">Add Components</h3>
+        {componentCategories.map((category) => {
+          const Icon = category.icon;
+          return (
+            <Card
+              key={category.type}
+              className="mb-2 cursor-pointer hover:bg-accent transition-colors"
+              onClick={() => onComponentCategoryClick(category.type)}
+            >
+              <CardContent className="p-3">
+                <div className="flex items-center">
+                  <Icon className="h-5 w-5 mr-3 text-muted-foreground" />
+                  <div>
+                    <div className="font-medium">{category.name}</div>
+                    <div className="text-xs text-muted-foreground mt-1">
+                      {category.description}
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
     </>
   );

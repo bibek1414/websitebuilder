@@ -1,14 +1,25 @@
 import React from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { useProduct } from "@/hooks/use-products";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import {
+  Breadcrumb,
+  BreadcrumbEllipsis,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
 import {
   AlertCircle,
   Star,
   ShieldCheck,
   Truck,
   PackageCheck,
+  Home,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "../ui/button";
@@ -21,9 +32,10 @@ import {
 
 interface ProductDetailProps {
   productId: string;
+  siteId?: string;
 }
 
-export const ProductDetail: React.FC<ProductDetailProps> = ({ productId }) => {
+export const ProductDetail: React.FC<ProductDetailProps> = ({ productId, siteId }) => {
   const { data: product, isLoading, error } = useProduct(productId);
   const [selectedImage, setSelectedImage] = React.useState<string | null>(null);
 
@@ -35,21 +47,28 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ productId }) => {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto px-4 py-12">
-        <div className="grid md:grid-cols-2 gap-8">
-          <div>
-            <Skeleton className="w-full aspect-square rounded-lg" />
-            <div className="flex gap-2 mt-4">
-              <Skeleton className="w-20 h-20 rounded" />
-              <Skeleton className="w-20 h-20 rounded" />
-              <Skeleton className="w-20 h-20 rounded" />
-            </div>
+      <div className="bg-background">
+        <div className="container mx-auto px-4 py-8">
+          {/* Breadcrumb skeleton */}
+          <div className="mb-6">
+            <Skeleton className="h-5 w-64" />
           </div>
-          <div className="space-y-4">
-            <Skeleton className="h-8 w-3/4" />
-            <Skeleton className="h-6 w-1/4" />
-            <Skeleton className="h-10 w-1/2" />
-            <Skeleton className="h-20 w-full" />
+
+          <div className="grid md:grid-cols-2 gap-8">
+            <div>
+              <Skeleton className="w-full aspect-square rounded-lg" />
+              <div className="flex gap-2 mt-4">
+                <Skeleton className="w-20 h-20 rounded" />
+                <Skeleton className="w-20 h-20 rounded" />
+                <Skeleton className="w-20 h-20 rounded" />
+              </div>
+            </div>
+            <div className="space-y-4">
+              <Skeleton className="h-8 w-3/4" />
+              <Skeleton className="h-6 w-1/4" />
+              <Skeleton className="h-10 w-1/2" />
+              <Skeleton className="h-20 w-full" />
+            </div>
           </div>
         </div>
       </div>
@@ -58,15 +77,40 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ productId }) => {
 
   if (error || !product) {
     return (
-      <div className="container mx-auto px-4 py-12">
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Error</AlertTitle>
-          <AlertDescription>
-            {error?.message ||
-              "Could not load product details. Please try again."}
-          </AlertDescription>
-        </Alert>
+      <div className="bg-background">
+        <div className="container mx-auto px-4 py-8">
+          <Breadcrumb className="mb-6">
+            <BreadcrumbList>
+              <BreadcrumbItem>
+                <BreadcrumbLink asChild>
+                  <Link href="/" className="flex items-center gap-2">
+                    <Home className="h-4 w-4" />
+                    Home
+                  </Link>
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbLink asChild>
+                  <Link href="/products">Products</Link>
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbPage>Error</BreadcrumbPage>
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </Breadcrumb>
+
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>
+              {error?.message ||
+                "Could not load product details. Please try again."}
+            </AlertDescription>
+          </Alert>
+        </div>
       </div>
     );
   }
@@ -79,6 +123,37 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ productId }) => {
   return (
     <div className="bg-background">
       <div className="container mx-auto px-4 py-8 md:py-16">
+        {/* Breadcrumb Navigation */}
+        <Breadcrumb className="mb-8">
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink asChild>
+                <Link
+                  href={`/preview?site=${siteId}&page=home`}
+                  className="flex items-center gap-2"
+                >
+                  <Home className="h-4 w-4" />
+                  Home
+                </Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbLink asChild>
+                <Link href={`/preview?site=${siteId}&page=products`}>
+                  Products
+                </Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbPage className="text-foreground font-medium">
+                {product.title}
+              </BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
+
         <div className="grid md:grid-cols-2 gap-8 lg:gap-16">
           <div>
             <div className="relative aspect-square w-full overflow-hidden rounded-lg border border-border">

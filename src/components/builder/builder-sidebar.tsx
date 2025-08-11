@@ -14,6 +14,7 @@ import { NavbarStylesDialog } from "./navbar-styles-dialog";
 import { FooterStylesDialog } from "@/components/footer/footer-styles-dialog";
 import ColorPicker from "@/components/color-picker";
 import { Component } from "@/components/component-renders";
+import { ComponentPreviews } from "./component-previews";
 
 interface ThemeSettings {
   primary: string;
@@ -70,6 +71,10 @@ export const BuilderSidebar: React.FC<BuilderSidebarProps> = ({
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [showNavbarDialog, setShowNavbarDialog] = useState(false);
   const [showFooterDialog, setShowFooterDialog] = useState(false);
+  const [previewDialogState, setPreviewDialogState] = useState<{
+    open: boolean;
+    type: string | null;
+  }>({ open: false, type: null });
 
   const handleNavbarClick = () => {
     setShowNavbarDialog(true);
@@ -77,6 +82,19 @@ export const BuilderSidebar: React.FC<BuilderSidebarProps> = ({
 
   const handleFooterClick = () => {
     setShowFooterDialog(true);
+  };
+
+  const handleComponentCategoryClick = (type: string) => {
+    if (type === "text") {
+      onComponentClick(type);
+    } else {
+      setPreviewDialogState({ open: true, type: type });
+    }
+  };
+
+  const handleComponentSelect = (type: string, style: string) => {
+    onComponentClick(type, style);
+    setPreviewDialogState({ open: false, type: null });
   };
 
   return (
@@ -143,7 +161,16 @@ export const BuilderSidebar: React.FC<BuilderSidebarProps> = ({
         onPageDelete={onPageDelete}
         onNavbarClick={handleNavbarClick}
         onFooterClick={handleFooterClick}
-        onComponentClick={onComponentClick}
+        onComponentCategoryClick={handleComponentCategoryClick}
+      />
+
+      <ComponentPreviews
+        open={previewDialogState.open}
+        componentType={previewDialogState.type}
+        onOpenChange={(isOpen) =>
+          setPreviewDialogState({ ...previewDialogState, open: isOpen })
+        }
+        onSelect={handleComponentSelect}
       />
 
       <NavbarStylesDialog
