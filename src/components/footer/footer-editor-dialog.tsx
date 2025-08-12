@@ -396,6 +396,7 @@ export function FooterEditorDialog({
                           }
                           placeholder="Link Text"
                           className="flex-1"
+                          
                         />
                         <Input
                           value={link.href || ""}

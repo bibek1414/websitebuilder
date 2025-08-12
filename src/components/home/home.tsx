@@ -23,8 +23,6 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Plus, Edit, Eye, Trash2, ExternalLink } from "lucide-react";
-
-// Import your env config
 import { buildSiteUrl, getMainSiteUrl, envConfig } from "@/lib/env-config";
 
 interface Site {

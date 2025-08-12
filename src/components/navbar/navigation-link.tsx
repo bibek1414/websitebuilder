@@ -137,6 +137,7 @@ export function NavigationLinks({
                   onChange={(e) => setNewLinkText(e.target.value)}
                   placeholder="Enter link text"
                   className="w-full"
+                  
                 />
               </div>
 
