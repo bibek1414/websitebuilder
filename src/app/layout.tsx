@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Website Builder",
+  title: "NepDora.",
   description: "Build websites with ease",
 };
 

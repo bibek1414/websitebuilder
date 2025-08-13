@@ -1,12 +1,13 @@
 
-import { siteConfig } from "@/config/site";
 import { LoginResponse, SignupResponse } from "@/types/auth";
+import { siteConfig } from "@/config/site";
 
 const API_BASE_URL = siteConfig.apiBaseUrl;
 
 interface SignupData {
   email: string;
   password: string; 
+  phone: string;
   store_name: string;
 }
 

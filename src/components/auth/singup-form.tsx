@@ -83,7 +83,21 @@ export function SignupForm({
                   </p>
                 )}
               </div>
-
+              <div>
+                <Input
+                  id="phone"
+                  type="tel"
+                  label="Phone Number"
+                  disabled={isLoading}
+                  className="border-gray-300 focus:ring-primary"
+                  {...register("phone")}
+                />
+                {errors.phone && (
+                  <p className="mt-2 text-sm font-medium text-red-500">
+                    {errors.phone.message}
+                  </p>
+                )}
+              </div>
               <div>
                 <Input
                   id="password"

@@ -6,7 +6,6 @@ import { User, AuthTokens, LoginResponse } from "@/types/auth";
 import { loginUser, signupUser } from "@/services/auth/api";
 import { toast } from "sonner";
 
-// Define interfaces for form data
 interface LoginData {
   email: string;
   password: string;
@@ -15,6 +14,7 @@ interface LoginData {
 interface SignupData {
   email: string;
   password: string;
+  phone: string;
   store_name: string;
 }
 
@@ -48,6 +48,8 @@ interface AuthContextType {
   // Email verification properties
   verificationEmail: string | null;
   setVerificationEmail: (email: string | null) => void;
+  // JWT token utilities
+  clearAuthData: () => void;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(
@@ -66,18 +68,28 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const storedTokens = localStorage.getItem("authTokens");
     const storedUser = localStorage.getItem("authUser");
+    const storedVerificationEmail = localStorage.getItem("verificationEmail");
+
+    if (storedVerificationEmail) {
+      setVerificationEmail(storedVerificationEmail);
+    }
 
     if (storedTokens && storedUser) {
       try {
         const parsedTokens: AuthTokens = JSON.parse(storedTokens);
         const parsedUser: User = JSON.parse(storedUser);
 
-        setTokens(parsedTokens);
-        setUser(parsedUser);
+        // Validate that the tokens exist and are not empty
+        if (parsedTokens.access_token && parsedUser.id) {
+          setTokens(parsedTokens);
+          setUser(parsedUser);
+        } else {
+          // Clear invalid data
+          clearAuthData();
+        }
       } catch (error) {
         console.error("Failed to parse stored auth data:", error);
-        localStorage.removeItem("authTokens");
-        localStorage.removeItem("authUser");
+        clearAuthData();
       }
     }
     setIsLoading(false);
@@ -93,6 +105,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const updateTokens = (newTokens: AuthTokens) => {
     setTokens(newTokens);
     localStorage.setItem("authTokens", JSON.stringify(newTokens));
+  };
+
+  const clearAuthData = () => {
+    setUser(null);
+    setTokens(null);
+    localStorage.removeItem("authTokens");
+    localStorage.removeItem("authUser");
+    localStorage.removeItem("verificationEmail");
+    if (typeof window !== "undefined") {
+      sessionStorage.removeItem("redirectAfterLogin");
+    }
   };
 
   const getErrorMessage = (error: ErrorResponse) => {
@@ -234,6 +257,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         error,
       });
 
+      // Clear any corrupted auth data on login failure
+      clearAuthData();
+
       // Re-throw the error so the form can handle it
       throw error;
     } finally {
@@ -248,6 +274,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         email: data.email,
         password: data.password,
         store_name: data.store_name,
+        phone: data.phone,
       };
 
       await signupUser(signupData);
@@ -284,19 +311,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const logout = () => {
-    setUser(null);
-    setTokens(null);
+    clearAuthData();
     setVerificationEmail(null);
-    localStorage.removeItem("authTokens");
-    localStorage.removeItem("authUser");
-    localStorage.removeItem("verificationEmail");
-    // Clear any pending redirects
-    if (typeof window !== "undefined") {
-      sessionStorage.removeItem("redirectAfterLogin");
-    }
+
     toast.success("Logged Out", {
       description: "You have been successfully logged out.",
     });
+
     router.push("/login");
   };
 
@@ -310,9 +331,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         logout,
         updateTokens,
         isLoading,
-        isAuthenticated: !!user && !!tokens,
+        isAuthenticated: !!user && !!tokens?.access_token,
         verificationEmail,
         setVerificationEmail,
+        clearAuthData,
       }}
     >
       {children}

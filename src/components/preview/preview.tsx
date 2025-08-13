@@ -444,9 +444,7 @@ function PreviewContent() {
 
       {!footer && (
         <footer className="bg-muted border-t py-4 text-center text-sm text-muted-foreground">
-          <div className="container mx-auto px-4">
-            Built with Website Builder
-          </div>
+          <div className="container mx-auto px-4">Built with NepDora.</div>
         </footer>
       )}
     </div>
