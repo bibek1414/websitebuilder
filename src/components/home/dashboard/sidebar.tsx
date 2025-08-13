@@ -24,7 +24,7 @@ interface SidebarProps {
 }
 
 const navigationItems: NavigationItem[] = [
-  { name: "Dashboard", href: "/dashboard", icon: Home },
+  { name: "Dashboard", href: "/", icon: Home },
   { name: "Products", href: "/products", icon: Package },
   { name: "Orders", href: "/orders", icon: ShoppingCart },
   { name: "Blogs", href: "/blogs", icon: FileText },
