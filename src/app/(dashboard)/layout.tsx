@@ -5,8 +5,15 @@ import { Button } from "@/components/ui/button";
 import { AlertCircle } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useJWT } from "@/hooks/use-jwt";
-import Sidebar from "@/components/home/dashboard/sidebar";
-import Header from "@/components/home/dashboard/header";
+import dynamic from "next/dynamic";
+
+// Dynamically import components to avoid SSR issues
+const Sidebar = dynamic(() => import("@/components/home/dashboard/sidebar"), {
+  ssr: false,
+});
+const Header = dynamic(() => import("@/components/home/dashboard/header"), {
+  ssr: false,
+});
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -14,8 +21,8 @@ interface DashboardLayoutProps {
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const router = useRouter();
-
   const { logout: authLogout } = useAuth();
   const {
     user: jwtUser,
@@ -24,12 +31,22 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     isTokenValid,
   } = useJWT();
 
+  // Ensure component is mounted before rendering
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   // Redirect to login if not authenticated
   useEffect(() => {
     if (!jwtLoading && !isAuthenticated) {
       router.push("/login");
     }
   }, [jwtLoading, isAuthenticated, router]);
+
+  // Don't render until mounted (prevents hydration mismatch)
+  if (!mounted) {
+    return null;
+  }
 
   // Show loading state while checking authentication
   if (jwtLoading) {
@@ -74,15 +91,11 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   return (
     <div className="min-h-screen bg-gray-50">
       <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
-      
       {/* Main content */}
       <div className="lg:ml-64">
         <Header user={jwtUser} setSidebarOpen={setSidebarOpen} />
-        
         {/* Page content */}
-        <main className="p-6">
-          {children}
-        </main>
+        <main className="p-6">{children}</main>
       </div>
     </div>
   );
