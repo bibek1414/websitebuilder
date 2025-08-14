@@ -78,6 +78,18 @@ export default function HomePage() {
   }
 
   const sites = sitesData || [];
+  const userHasSite = sites.length > 0;
+
+  // Get the user's site domain if they have one
+  const userSite = sites[0];
+  const isProduction = process.env.NODE_ENV === "production";
+  const baseDomain = process.env.NEXT_PUBLIC_BASE_DOMAIN;
+
+  let displayDomain = jwtUser.domain;
+  if (userSite && isProduction && baseDomain) {
+    const siteSlug = userSite.name.toLowerCase().replace(/[^a-z0-9]/g, "-");
+    displayDomain = `${siteSlug}.${baseDomain}`;
+  }
 
   // Render authenticated dashboard
   return (
@@ -97,14 +109,31 @@ export default function HomePage() {
             </h2>
             <p className="text-gray-600 text-sm">
               Store: {jwtUser.storeName} • Role: {jwtUser.role} • Domain:{" "}
-              {jwtUser.domain}
+              {displayDomain}
             </p>
+            {userHasSite && (
+              <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded">
+                <p className="text-green-700 text-sm font-medium">
+                  🌐 Your site is live at:
+                  <a
+                    href={`https://${displayDomain}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="ml-1 underline hover:text-green-800"
+                  >
+                    {displayDomain}
+                  </a>
+                </p>
+              </div>
+            )}
           </div>
 
-          {/* Create new site button */}
-          <div className="mb-6">
-            <CreateSiteModal userDomain={jwtUser.domain} />
-          </div>
+          {/* Create new site button - Only show if user doesn't have a site */}
+          {!userHasSite && (
+            <div className="mb-6">
+              <CreateSiteModal userDomain={jwtUser.domain} />
+            </div>
+          )}
 
           {/* Sites grid */}
           {sitesLoading ? (
@@ -127,15 +156,13 @@ export default function HomePage() {
                 Try Again
               </Button>
             </div>
-          ) : sites.length > 0 ? (
+          ) : userHasSite ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {sites.map((site) => (
-                <SiteCard
-                  key={site.id}
-                  site={site}
-                  userDomain={jwtUser.domain}
-                />
-              ))}
+              <SiteCard
+                key={userSite.id}
+                site={userSite}
+                userDomain={displayDomain}
+              />
             </div>
           ) : (
             <div className="text-center py-12">
@@ -146,12 +173,23 @@ export default function HomePage() {
                 No sites yet
               </h3>
               <p className="mt-2 text-gray-500">
-                Get started by creating your first website for{" "}
-                {jwtUser.storeName}.
+                Get started by creating your website for {jwtUser.storeName}.
+                You can create one site per account.
               </p>
               <div className="mt-6">
                 <CreateSiteModal userDomain={jwtUser.domain} />
               </div>
+            </div>
+          )}
+
+          {/* Show message if user already has a site */}
+          {userHasSite && (
+            <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <p className="text-blue-800 text-sm">
+                <strong>Note:</strong> Each account can have only one site. To
+                create a new site, you&apos;ll need to delete your current site
+                first.
+              </p>
             </div>
           )}
         </main>

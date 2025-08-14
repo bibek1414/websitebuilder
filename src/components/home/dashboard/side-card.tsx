@@ -13,8 +13,17 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Edit, Eye, Trash2, Loader2, ExternalLink } from "lucide-react";
+import {
+  Edit,
+  Eye,
+  Trash2,
+  Loader2,
+  ExternalLink,
+  Copy,
+  CheckCircle,
+} from "lucide-react";
 import { useDeleteSite } from "@/hooks/use-site";
+import { useState } from "react";
 import type { Site } from "@/types/site";
 
 interface SiteCardProps {
@@ -25,6 +34,7 @@ interface SiteCardProps {
 export default function SiteCard({ site, userDomain }: SiteCardProps) {
   const router = useRouter();
   const deleteSiteMutation = useDeleteSite();
+  const [copied, setCopied] = useState(false);
 
   const openSiteBuilder = () => {
     router.push(
@@ -40,19 +50,26 @@ export default function SiteCard({ site, userDomain }: SiteCardProps) {
   };
 
   const openLiveSite = () => {
-    // Generate the live site URL based on environment
-    const isProduction = process.env.NODE_ENV === 'production';
+    const isProduction = process.env.NODE_ENV === "production";
     const baseDomain = process.env.NEXT_PUBLIC_BASE_DOMAIN;
-    const protocol = process.env.NEXT_PUBLIC_PROTOCOL || 'https';
-    
+    const protocol = process.env.NEXT_PUBLIC_PROTOCOL || "https";
+
     if (isProduction && baseDomain) {
-      // Create subdomain URL: sitename.yourdomain.com
-      const siteSlug = site.name.toLowerCase().replace(/[^a-z0-9]/g, '-');
+      const siteSlug = site.name.toLowerCase().replace(/[^a-z0-9]/g, "-");
       const liveUrl = `${protocol}://${siteSlug}.${baseDomain}`;
       window.open(liveUrl, "_blank");
     } else {
-      // Fallback to preview in development
       previewSite();
+    }
+  };
+
+  const copyDomainToClipboard = async () => {
+    try {
+      await navigator.clipboard.writeText(userDomain);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (error) {
+      console.error("Failed to copy to clipboard:", error);
     }
   };
 
@@ -64,25 +81,51 @@ export default function SiteCard({ site, userDomain }: SiteCardProps) {
     }
   };
 
-  const isProduction = process.env.NODE_ENV === 'production';
+  const isProduction = process.env.NODE_ENV === "production";
   const baseDomain = process.env.NEXT_PUBLIC_BASE_DOMAIN;
 
   return (
     <Card className="hover:shadow-lg transition-shadow border-gray-200">
       <CardHeader className="pb-3">
-        <CardTitle className="text-lg">{site.name}</CardTitle>
-        <div className="space-y-2">
+        <CardTitle className="text-lg flex items-center justify-between">
+          <span>{site.name}</span>
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-green-100 text-green-800">
+              Active
+            </span>
+          </div>
+        </CardTitle>
+        <div className="space-y-3">
           {site.description && (
             <p className="text-sm text-gray-600 line-clamp-2">
               {site.description}
             </p>
           )}
 
-          {isProduction && baseDomain && (
-            <div className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded">
-              {site.name.toLowerCase().replace(/[^a-z0-9]/g, '-')}.{baseDomain}
+          {/* Live Domain Display */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between p-3 bg-gradient-to-r from-blue-50 to-green-50 rounded-lg border border-blue-200">
+              <div className="flex-1">
+                <p className="text-xs text-gray-600 mb-1">Live Domain:</p>
+                <p className="text-sm font-mono text-blue-700 break-all">
+                  {userDomain}
+                </p>
+              </div>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={copyDomainToClipboard}
+                className="ml-2 p-1 h-8 w-8"
+                title="Copy domain"
+              >
+                {copied ? (
+                  <CheckCircle className="w-4 h-4 text-green-600" />
+                ) : (
+                  <Copy className="w-4 h-4 text-gray-500" />
+                )}
+              </Button>
             </div>
-          )}
+          </div>
 
           {site.createdAt && (
             <p className="text-gray-500 text-xs">
@@ -102,7 +145,7 @@ export default function SiteCard({ site, userDomain }: SiteCardProps) {
             <Edit className="w-4 h-4 mr-1" />
             Edit
           </Button>
-          
+
           <Button
             size="sm"
             variant="outline"
@@ -114,19 +157,17 @@ export default function SiteCard({ site, userDomain }: SiteCardProps) {
             Preview
           </Button>
 
-          {isProduction && baseDomain && (
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={openLiveSite}
-              className="flex-1 bg-green-50 text-green-700 hover:bg-green-100 border-green-200 min-w-0"
-              disabled={deleteSiteMutation.isPending}
-            >
-              <ExternalLink className="w-4 h-4 mr-1" />
-              Live
-            </Button>
-          )}
-          
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={openLiveSite}
+            className="flex-1 bg-green-50 text-green-700 hover:bg-green-100 border-green-200 min-w-0"
+            disabled={deleteSiteMutation.isPending}
+          >
+            <ExternalLink className="w-4 h-4 mr-1" />
+            Live
+          </Button>
+
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <Button
@@ -145,10 +186,15 @@ export default function SiteCard({ site, userDomain }: SiteCardProps) {
             </AlertDialogTrigger>
             <AlertDialogContent>
               <AlertDialogHeader>
-                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                <AlertDialogTitle>Delete Your Site?</AlertDialogTitle>
                 <AlertDialogDescription>
                   This action cannot be undone. This will permanently delete
-                  your site &apos;{site.name}&apos;.
+                  your site &apos;{site.name}&apos; and the domain {userDomain}{" "}
+                  will no longer be accessible.
+                  <br />
+                  <br />
+                  <strong>Note:</strong> After deletion, you can create a new
+                  site with a different name.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
@@ -166,7 +212,7 @@ export default function SiteCard({ site, userDomain }: SiteCardProps) {
                       Deleting...
                     </>
                   ) : (
-                    "Delete"
+                    "Delete Site"
                   )}
                 </AlertDialogAction>
               </AlertDialogFooter>
