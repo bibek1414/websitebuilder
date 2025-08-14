@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { AlertCircle, FileX } from "lucide-react";
 
 import { ProductDetail } from "@/components/products/product-details";
-import { Product } from "@/types/product";
+import { Product } from "@/types/products";
 
 interface ThemeColors {
   primary: string;

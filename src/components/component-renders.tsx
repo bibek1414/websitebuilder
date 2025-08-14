@@ -14,7 +14,7 @@ import { Footer } from "./footer/footer";
 import { FooterData } from "@/types/footer";
 import { Facebook, Twitter } from "lucide-react";
 import { ProductsList } from "./products/product-list";
-import { ProductsData } from "@/types/product";
+import { ProductsData } from "@/types/products";
 import {
   AboutUs1,
   AboutUs1Data,

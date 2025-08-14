@@ -1,5 +1,5 @@
 import { useQuery, UseQueryResult } from "@tanstack/react-query";
-import { Product, ProductListResponse } from "@/types/product";
+import { Product, ProductListResponse } from "@/types/products";
 import { productsApi } from "@/services/api/products";
 
 // Query keys for better cache management
@@ -38,4 +38,3 @@ export function useProduct(id: string): UseQueryResult<Product, Error> {
     gcTime: 10 * 60 * 1000, // 10 minutes
   });
 }
-

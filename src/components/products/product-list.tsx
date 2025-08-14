@@ -7,7 +7,7 @@ import { ProductCard3 } from "./product-card3";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle, Eye } from "lucide-react";
-import { Product } from "@/types/product";
+import { Product } from "@/types/products";
 
 interface ProductsListProps {
   component: Component;
@@ -28,7 +28,10 @@ export const ProductsList: React.FC<ProductsListProps> = ({
   // Extract products from the response data
   const products = data?.products || [];
 
-  const renderProductCard = (product: Product, isBuilderMode: boolean = false) => {
+  const renderProductCard = (
+    product: Product,
+    isBuilderMode: boolean = false
+  ) => {
     const cardProps = {
       product,
       siteId: isBuilderMode ? undefined : siteId, // Disable links in builder mode
@@ -132,7 +135,6 @@ export const ProductsList: React.FC<ProductsListProps> = ({
     );
   }
 
-  
   return (
     <div className="py-8 md:py-12 ">
       <div className="container mx-auto px-4 max-w-7xl">

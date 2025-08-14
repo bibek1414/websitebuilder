@@ -1,9 +1,9 @@
-import React from 'react'
+import { ProductList } from "@/components/dashboard/products/product-list";
 
-function page() {
+export default function ProductsPage() {
   return (
-    <div>page</div>
-  )
+    <div className="container mx-auto py-6">
+      <ProductList />
+    </div>
+  );
 }
-
-export default page

@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { siteApi } from "@/services/api/site";
+import { useSiteApi } from "@/services/api/site";
 import type {
   CreateSiteRequest,
   CreateSiteResponse,
@@ -21,7 +21,7 @@ export const siteKeys = {
 export const useSites = () => {
   return useQuery({
     queryKey: siteKeys.lists(),
-    queryFn: siteApi.getSites,
+    queryFn: useSiteApi.getSites, // Direct reference to the API method
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 };
@@ -30,14 +30,13 @@ export const useCreateSite = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: CreateSiteRequest) => siteApi.createSite(data),
+    mutationFn: (data: CreateSiteRequest) => useSiteApi.createSite(data),
     onSuccess: (data: CreateSiteResponse) => {
-      // Invalidate and refetch sites list
       queryClient.invalidateQueries({ queryKey: siteKeys.lists() });
 
       toast.success("Site Created", {
         description:
-          data.message || `Site "${data.name}" has been created successfully.`, 
+          data.message || `Site "${data.name}" has been created successfully.`,
       });
     },
     onError: (error: ApiError) => {
@@ -54,9 +53,8 @@ export const useDeleteSite = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (siteId: string) => siteApi.deleteSite(siteId),
+    mutationFn: (siteId: string) => useSiteApi.deleteSite(siteId),
     onSuccess: (data: DeleteSiteResponse) => {
-      // Invalidate sites list
       queryClient.invalidateQueries({ queryKey: siteKeys.lists() });
 
       toast.success("Site Deleted", {

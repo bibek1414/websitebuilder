@@ -1,4 +1,4 @@
-import { Product, ProductListResponse } from "@/types/product";
+import { Product, ProductListResponse } from "@/types/products";
 
 const BASE_URL = "https://dummyjson.com";
 
@@ -20,7 +20,4 @@ export const productsApi = {
     }
     return response.json();
   },
-
-  
- 
 };
