@@ -23,6 +23,7 @@ import {
   CheckCircle,
 } from "lucide-react";
 import { useDeleteSite } from "@/hooks/use-site";
+import { useAuth } from "@/hooks/use-auth";
 import { useState } from "react";
 import type { Site } from "@/types/site";
 
@@ -34,6 +35,7 @@ interface SiteCardProps {
 export default function SiteCard({ site, userDomain }: SiteCardProps) {
   const router = useRouter();
   const deleteSiteMutation = useDeleteSite();
+  const { user, tokens } = useAuth();
   const [copied, setCopied] = useState(false);
 
   const openSiteBuilder = () => {
@@ -56,7 +58,16 @@ export default function SiteCard({ site, userDomain }: SiteCardProps) {
 
     if (isProduction && baseDomain) {
       const siteSlug = site.name.toLowerCase().replace(/[^a-z0-9]/g, "-");
-      const liveUrl = `${protocol}://${siteSlug}.${baseDomain}`;
+      let liveUrl = `${protocol}://${siteSlug}.${baseDomain}`;
+
+      // Add auth parameters to ensure seamless login
+      if (tokens?.access_token && user) {
+        const separator = liveUrl.includes("?") ? "&" : "?";
+        liveUrl += `${separator}auth_token=${encodeURIComponent(
+          tokens.access_token
+        )}&user_data=${encodeURIComponent(JSON.stringify(user))}`;
+      }
+
       window.open(liveUrl, "_blank");
     } else {
       previewSite();
@@ -82,7 +93,6 @@ export default function SiteCard({ site, userDomain }: SiteCardProps) {
   };
 
   const isProduction = process.env.NODE_ENV === "production";
-  const baseDomain = process.env.NEXT_PUBLIC_BASE_DOMAIN;
 
   return (
     <Card className="hover:shadow-lg transition-shadow border-gray-200">
@@ -163,6 +173,7 @@ export default function SiteCard({ site, userDomain }: SiteCardProps) {
             onClick={openLiveSite}
             className="flex-1 bg-green-50 text-green-700 hover:bg-green-100 border-green-200 min-w-0"
             disabled={deleteSiteMutation.isPending}
+            title="Open live site with automatic login"
           >
             <ExternalLink className="w-4 h-4 mr-1" />
             Live
@@ -218,6 +229,15 @@ export default function SiteCard({ site, userDomain }: SiteCardProps) {
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
+        </div>
+
+        {/* Additional info about cross-domain auth */}
+        <div className="mt-3 p-2 bg-blue-50 border border-blue-200 rounded text-xs text-blue-700">
+          <p className="font-medium">✨ Seamless Access</p>
+          <p>
+            Click &quot;Live&quot; to visit your site with automatic login - no
+            need to sign in again!
+          </p>
         </div>
       </CardContent>
     </Card>

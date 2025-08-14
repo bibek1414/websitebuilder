@@ -54,39 +54,40 @@ export default function Header({ user, setSidebarOpen }: HeaderProps) {
     router.push(href);
   };
 
+  // Enhanced cross-domain cookie deletion
+  const deleteCrossDomainCookie = (name: string) => {
+    const baseDomain = process.env.NEXT_PUBLIC_BASE_DOMAIN || "nepdora.com";
+    // Delete from current domain
+    document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+    // Delete from base domain and all subdomains
+    document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; domain=.${baseDomain}; path=/;`;
+    // Also try without the leading dot for good measure
+    document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; domain=${baseDomain}; path=/;`;
+  };
+
   const handleLogout = async () => {
     try {
-      // Clear all auth-related data
+      // Clear all localStorage data
       localStorage.removeItem("authTokens");
       localStorage.removeItem("authUser");
       localStorage.removeItem("verificationEmail");
 
-      // Clear session storage
+      // Clear sessionStorage
       if (typeof window !== "undefined") {
         sessionStorage.removeItem("redirectAfterLogin");
       }
 
-      // Call the auth context logout
+      // Clear all possible auth cookies
+      deleteCrossDomainCookie("authToken");
+      deleteCrossDomainCookie("authUser");
+      deleteCrossDomainCookie("token"); // in case you use this name elsewhere
+
+      // Call the auth context logout (this will handle the redirect)
       authLogout();
 
       toast.success("Logged Out", {
-        description: "You have been successfully logged out.",
+        description: "You have been successfully logged out from all sites.",
       });
-
-      // Check if we're on a subdomain and redirect to main domain
-      const hostname = window.location.hostname;
-      const baseDomain = process.env.NEXT_PUBLIC_BASE_DOMAIN || 'nepdora.com';
-      const protocol = process.env.NEXT_PUBLIC_PROTOCOL || 'https';
-      
-      // If we're on a subdomain, redirect to main domain
-      if (hostname.includes('.') && hostname.endsWith(baseDomain) && !hostname.startsWith('www.') && hostname !== baseDomain) {
-        // We're on a subdomain, redirect to main domain
-        window.location.href = `${protocol}://www.${baseDomain}`;
-      } else {
-        // We're already on main domain, just redirect to home
-        window.location.href = "/";
-      }
-
     } catch (error) {
       console.error("Error during logout:", error);
       toast.error("Logout Error", {
