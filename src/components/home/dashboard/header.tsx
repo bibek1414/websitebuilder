@@ -73,10 +73,20 @@ export default function Header({ user, setSidebarOpen }: HeaderProps) {
         description: "You have been successfully logged out.",
       });
 
-      window.location.href = "/";
+      // Check if we're on a subdomain and redirect to main domain
+      const hostname = window.location.hostname;
+      const baseDomain = process.env.NEXT_PUBLIC_BASE_DOMAIN || 'nepdora.com';
+      const protocol = process.env.NEXT_PUBLIC_PROTOCOL || 'https';
+      
+      // If we're on a subdomain, redirect to main domain
+      if (hostname.includes('.') && hostname.endsWith(baseDomain) && !hostname.startsWith('www.') && hostname !== baseDomain) {
+        // We're on a subdomain, redirect to main domain
+        window.location.href = `${protocol}://www.${baseDomain}`;
+      } else {
+        // We're already on main domain, just redirect to home
+        window.location.href = "/";
+      }
 
-      // await router.push("/");
-      // window.location.reload();
     } catch (error) {
       console.error("Error during logout:", error);
       toast.error("Logout Error", {
