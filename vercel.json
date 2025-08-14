@@ -1,6 +1,5 @@
 {
   "version": 2,
-  "domains": ["nepdora.vercel.app", "*.nepdora.vercel.app"],
   "build": {
     "env": {
       "NEXT_PUBLIC_BASE_DOMAIN": "nepdora.vercel.app",
@@ -8,18 +7,6 @@
       "NEXT_PUBLIC_ENABLE_SUBDOMAIN_ROUTING": "true"
     }
   },
-  "rewrites": [
-    {
-      "source": "/(.*)",
-      "destination": "/$1",
-      "has": [
-        {
-          "type": "host",
-          "value": "nepdora.vercel.app"
-        }
-      ]
-    }
-  ],
   "headers": [
     {
       "source": "/(.*)",
