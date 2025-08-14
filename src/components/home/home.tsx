@@ -10,6 +10,7 @@ import Sidebar from "@/components/home/dashboard/sidebar";
 import Header from "@/components/home/dashboard/header";
 import SiteCard from "@/components/home/dashboard/side-card";
 import CreateSiteModal from "@/components/home/dashboard/create-site-modal";
+import LandingPage from "@/components/landing-page/landing-page";
 
 export default function HomePage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -31,13 +32,6 @@ export default function HomePage() {
     refetch: refetchSites,
   } = useSites();
 
-  // Redirect to login if not authenticated
-  useEffect(() => {
-    if (!jwtLoading && !isAuthenticated) {
-      router.push("/login");
-    }
-  }, [jwtLoading, isAuthenticated, router]);
-
   // Show loading state while checking authentication
   if (jwtLoading) {
     return (
@@ -48,6 +42,11 @@ export default function HomePage() {
         </div>
       </div>
     );
+  }
+
+  // Show landing page if not authenticated
+  if (!jwtLoading && !isAuthenticated) {
+    return <LandingPage />;
   }
 
   // Show error state if token is invalid
@@ -78,8 +77,9 @@ export default function HomePage() {
     return null;
   }
 
-  const sites = sitesData?.sites || [];
+  const sites = sitesData || [];
 
+  // Render authenticated dashboard
   return (
     <div className="min-h-screen bg-gray-50">
       <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />

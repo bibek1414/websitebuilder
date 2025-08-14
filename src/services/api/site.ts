@@ -13,7 +13,7 @@ const API_BASE_URL = siteConfig.apiBaseUrl;
 export const siteApi = {
   // Get all sites
   getSites: async (): Promise<GetSitesResponse> => {
-    const response = await fetch(`${API_BASE_URL}/api/site/`, {
+    const response = await fetch(`${API_BASE_URL}/api/website/`, {
       method: "GET",
       headers: createHeaders(),
     });
@@ -23,7 +23,7 @@ export const siteApi = {
 
   // Create a new site
   createSite: async (data: CreateSiteRequest): Promise<CreateSiteResponse> => {
-    const response = await fetch(`${API_BASE_URL}/api/site/`, {
+    const response = await fetch(`${API_BASE_URL}/api/website/`, {
       method: "POST",
       headers: createHeaders(),
       body: JSON.stringify(data),
@@ -34,7 +34,7 @@ export const siteApi = {
 
   // Delete site
   deleteSite: async (siteId: string): Promise<DeleteSiteResponse> => {
-    const response = await fetch(`${API_BASE_URL}/api/site/${siteId}/`, {
+    const response = await fetch(`${API_BASE_URL}/api/website/${siteId}/`, {
       method: "DELETE",
       headers: createHeaders(),
     });

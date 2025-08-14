@@ -41,7 +41,8 @@ export default function SiteCard({ site, userDomain }: SiteCardProps) {
 
   const handleDelete = async () => {
     try {
-      await deleteSiteMutation.mutateAsync(site.id);
+      // Convert number to string for the mutation
+      await deleteSiteMutation.mutateAsync(site.id.toString());
     } catch (error) {
       // Error handling is done in the mutation
       console.error("Error deleting site:", error);
@@ -58,9 +59,12 @@ export default function SiteCard({ site, userDomain }: SiteCardProps) {
               {site.description}
             </p>
           )}
-          <p className="text-gray-500 text-xs">
-            Created: {new Date(site.createdAt).toLocaleDateString()}
-          </p>
+
+          {site.createdAt && (
+            <p className="text-gray-500 text-xs">
+              Created: {new Date(site.createdAt).toLocaleDateString()}
+            </p>
+          )}
         </div>
       </CardHeader>
       <CardContent className="pt-0">

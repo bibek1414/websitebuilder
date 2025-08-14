@@ -37,8 +37,7 @@ export const useCreateSite = () => {
 
       toast.success("Site Created", {
         description:
-          data.message ||
-          `Site "${data.site.name}" has been created successfully.`,
+          data.message || `Site "${data.name}" has been created successfully.`, 
       });
     },
     onError: (error: ApiError) => {

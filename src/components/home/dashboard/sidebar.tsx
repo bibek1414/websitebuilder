@@ -65,7 +65,8 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }: SidebarProps) {
         <div className="flex h-full flex-col">
           {/* Sidebar Header */}
           <div className="flex h-16 items-center justify-between border-b px-6">
-            <h2 className="text-lg font-semibold text-gray-900">NepDora.</h2>
+            {/* <h2 className="text-lg font-semibold text-gray-900">NepDora.</h2> */}
+            <img src="/logo.png" alt="Logo" className="h-8 " />
             <button
               onClick={() => setSidebarOpen(false)}
               className="lg:hidden p-1 rounded-md hover:bg-gray-100"

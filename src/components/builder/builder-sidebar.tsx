@@ -93,7 +93,9 @@ export const BuilderSidebar: React.FC<BuilderSidebarProps> = ({
       <div className="p-4 border-b">
         <h2 className="grid grid-cols-2 items-center w-full">
           <span className="text-lg font-bold truncate text-left">
-            NepDora<span className="text-primary font-bold">.</span>
+            {/* NepDora<span className="text-primary font-bold">.</span>
+             */}
+             <img src="/logo.png" alt="Logo" className="h-6 " />
           </span>
           <span className="text-lg font-bold truncate text-right">
             {siteName || "Untitled"}

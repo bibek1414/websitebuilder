@@ -1,8 +1,9 @@
 export interface Site {
-  id: string;
+  id: number; // Changed from string to number based on your API response
   name: string;
   description: string;
-  createdAt: string;
+  user: number;
+  createdAt?: string; // Make optional since it's not in your API response
   updatedAt?: string;
 }
 
@@ -11,15 +12,12 @@ export interface CreateSiteRequest {
   description: string;
 }
 
-export interface CreateSiteResponse {
-  site: Site;
+export interface CreateSiteResponse extends Site {
   message?: string;
 }
 
-export interface GetSitesResponse {
-  sites: Site[];
-  total?: number;
-}
+// Update this to match your API response
+export type GetSitesResponse = Site[]; // Direct array instead of wrapped object
 
 export interface DeleteSiteResponse {
   message: string;
