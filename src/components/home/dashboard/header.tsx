@@ -54,7 +54,7 @@ export default function Header({ user, setSidebarOpen }: HeaderProps) {
     router.push(href);
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     try {
       // Clear all auth-related data
       localStorage.removeItem("authTokens");
@@ -73,8 +73,10 @@ export default function Header({ user, setSidebarOpen }: HeaderProps) {
         description: "You have been successfully logged out.",
       });
 
-      // Redirect to login
-      router.push("/login");
+      window.location.href = "/";
+
+      // await router.push("/");
+      // window.location.reload();
     } catch (error) {
       console.error("Error during logout:", error);
       toast.error("Logout Error", {
