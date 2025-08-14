@@ -1,0 +1,41 @@
+{
+  "version": 2,
+  "domains": [
+    "yourdomain.com",
+    "*.yourdomain.com"
+  ],
+  "build": {
+    "env": {
+      "NEXT_PUBLIC_BASE_DOMAIN": "yourdomain.com",
+      "NEXT_PUBLIC_PROTOCOL": "https",
+      "NEXT_PUBLIC_ENABLE_SUBDOMAIN_ROUTING": "true"
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/$1",
+      "has": [
+        {
+          "type": "host",
+          "value": "yourdomain.com"
+        }
+      ]
+    }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Frame-Options",
+          "value": "SAMEORIGIN"
+        },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        }
+      ]
+    }
+  ]
+}
