@@ -1,12 +1,9 @@
 {
   "version": 2,
-  "domains": [
-    "yourdomain.com",
-    "*.yourdomain.com"
-  ],
+  "domains": ["nepdora.vercel.app", "*.nepdora.vercel.app"],
   "build": {
     "env": {
-      "NEXT_PUBLIC_BASE_DOMAIN": "yourdomain.com",
+      "NEXT_PUBLIC_BASE_DOMAIN": "nepdora.vercel.app",
       "NEXT_PUBLIC_PROTOCOL": "https",
       "NEXT_PUBLIC_ENABLE_SUBDOMAIN_ROUTING": "true"
     }
@@ -18,7 +15,7 @@
       "has": [
         {
           "type": "host",
-          "value": "yourdomain.com"
+          "value": "nepdora.vercel.app"
         }
       ]
     }
