@@ -98,10 +98,12 @@ export default function SiteCard({ site, userDomain }: SiteCardProps) {
 
     if (isProduction && baseDomain) {
       const siteSlug = site.name.toLowerCase().replace(/[^a-z0-9]/g, "-");
+
+      // Create the cleanest possible URL - just the root domain
+      // The middleware will automatically handle everything
       const liveUrl = `${protocol}://${siteSlug}.${baseDomain}`;
 
-      // For production, open directly to the subdomain without query params
-      // The middleware will handle authentication
+      // Open the clean root URL - middleware handles all the routing internally
       window.open(liveUrl, "_blank");
     } else {
       // For development, open preview
@@ -144,7 +146,7 @@ export default function SiteCard({ site, userDomain }: SiteCardProps) {
           <span>{site.name}</span>
           <div className="flex items-center gap-2">
             <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-green-100 text-green-800">
-              Active
+              Live
             </span>
           </div>
         </CardTitle>
@@ -159,7 +161,7 @@ export default function SiteCard({ site, userDomain }: SiteCardProps) {
           <div className="space-y-2">
             <div className="flex items-center justify-between p-3 bg-gradient-to-r from-blue-50 to-green-50 rounded-lg border border-blue-200">
               <div className="flex-1">
-                <p className="text-xs text-gray-600 mb-1">Live Domain:</p>
+                <p className="text-xs text-gray-600 mb-1">Live at:</p>
                 <p className="text-sm font-mono text-blue-700 break-all">
                   {userDomain}
                 </p>
@@ -218,12 +220,12 @@ export default function SiteCard({ site, userDomain }: SiteCardProps) {
             disabled={deleteSiteMutation.isPending}
             title={
               isProduction
-                ? "Open live site on subdomain"
+                ? "Open your live website"
                 : "Open preview site (development)"
             }
           >
             <ExternalLink className="w-4 h-4 mr-1" />
-            Live
+            Visit Site
           </Button>
 
           <AlertDialog>
@@ -279,12 +281,12 @@ export default function SiteCard({ site, userDomain }: SiteCardProps) {
         </div>
 
         {/* Additional info */}
-        <div className="mt-3 p-2 bg-blue-50 border border-blue-200 rounded text-xs text-blue-700">
-          <p className="font-medium">🌐 Live Site</p>
+        <div className="mt-3 p-2 bg-green-50 border border-green-200 rounded text-xs text-green-700">
+          <p className="font-medium">🌐 Your Website is Live!</p>
           <p>
             {isProduction
-              ? "Your site is accessible directly at the subdomain URL."
-              : "In development, the Live button opens the preview."}
+              ? "Visit your website directly at the clean URL above. No extra paths needed!"
+              : "In development, the 'Visit Site' button opens the preview."}
           </p>
         </div>
       </CardContent>

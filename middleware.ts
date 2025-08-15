@@ -89,9 +89,9 @@ export async function middleware(request: NextRequest) {
       });
     }
 
-    // Handle routing for subdomain
+    // Handle routing for subdomain - CLEAN URLs
     if (url.pathname === "/" || url.pathname === "") {
-      // Root path - redirect to site view with subdomain parameter
+      // Root path - rewrite to site-view with subdomain parameter
       url.pathname = "/site-view";
       url.searchParams.set("subdomain", subdomain);
 
@@ -104,10 +104,12 @@ export async function middleware(request: NextRequest) {
     }
 
     // Handle page routing (e.g., /about, /contact, etc.)
+    // These are clean URLs for different pages of the site
     if (
       !url.pathname.startsWith("/site-view") &&
       !url.pathname.startsWith("/_next") &&
-      !url.pathname.startsWith("/api")
+      !url.pathname.startsWith("/api") &&
+      !url.pathname.startsWith("/favicon")
     ) {
       const pagePath = url.pathname.replace(/^\//, ""); // Remove leading slash
 
