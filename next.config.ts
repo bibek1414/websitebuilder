@@ -12,7 +12,7 @@ const nextConfig = {
     // Determine if we're in production
     const isProduction = process.env.NODE_ENV === "production";
     const baseDomain = isProduction
-      ? process.env.NEXT_PUBLIC_BASE_DOMAIN || "yourdomain.com"
+      ? process.env.NEXT_PUBLIC_BASE_DOMAIN || "nepdora.com"
       : "localhost:3000";
 
     const enableSubdomainRouting = isProduction
@@ -28,12 +28,13 @@ const nextConfig = {
 
     return [
       {
-        // Handle subdomain requests (site.yourdomain.com -> /preview?site=site)
+        // Handle subdomain requests, but EXCLUDE www and main domain
         source: "/:path*",
         has: [
           {
             type: "host",
-            value: `(?<subdomain>[^.]+)\\.${escapedDomain}`,
+            // This regex excludes 'www' and matches only actual subdomains
+            value: `(?<subdomain>(?!www)[^.]+)\\.${escapedDomain}`,
           },
         ],
         destination: "/preview?site=:subdomain&path=:path*",
@@ -50,6 +51,10 @@ const nextConfig = {
           {
             key: "X-Frame-Options",
             value: "SAMEORIGIN",
+          },
+          {
+            key: "X-Content-Type-Options",
+            value: "nosniff",
           },
         ],
       },

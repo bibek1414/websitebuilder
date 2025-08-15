@@ -4,7 +4,8 @@
     "env": {
       "NEXT_PUBLIC_BASE_DOMAIN": "nepdora.com",
       "NEXT_PUBLIC_PROTOCOL": "https",
-      "NEXT_PUBLIC_ENABLE_SUBDOMAIN_ROUTING": "true"
+      "NEXT_PUBLIC_ENABLE_SUBDOMAIN_ROUTING": "true",
+      "NODE_ENV": "production"
     }
   },
   "headers": [
@@ -20,6 +21,32 @@
           "value": "nosniff"
         }
       ]
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/account/:path*",
+      "destination": "/account/:path*"
+    },
+    {
+      "source": "/login/:path*",
+      "destination": "/login/:path*"
+    },
+    {
+      "source": "/signup/:path*",
+      "destination": "/signup/:path*"
+    },
+    {
+      "source": "/auth/:path*",
+      "destination": "/auth/:path*"
+    },
+    {
+      "source": "/preview/:path*",
+      "destination": "/preview/:path*"
+    },
+    {
+      "source": "/builder/:path*",
+      "destination": "/builder/:path*"
     }
   ]
 }

@@ -18,70 +18,78 @@ export async function middleware(request: NextRequest) {
   const hostname = request.headers.get("host") || "";
   const baseDomain = process.env.NEXT_PUBLIC_BASE_DOMAIN || "nepdora.com";
   const protocol = process.env.NEXT_PUBLIC_PROTOCOL || "https";
-
-  console.log("Middleware Debug:", {
-    hostname,
-    baseDomain,
-    pathname: request.nextUrl.pathname,
-    isMainDomain: hostname === `www.${baseDomain}` || hostname === baseDomain,
-  });
-
-  // IMPORTANT: Skip middleware for account-related routes on main domain
   const url = request.nextUrl.clone();
 
-  // Check if we're on the main domain (including www)
-  const isMainDomain =
-    hostname === `www.${baseDomain}` || hostname === baseDomain;
+  // Debug logging (remove in production if needed)
+  if (process.env.NODE_ENV === "production") {
+    console.log("Production Middleware:", {
+      hostname,
+      baseDomain,
+      pathname: url.pathname,
+      isMainDomain: hostname === `www.${baseDomain}` || hostname === baseDomain,
+    });
+  }
 
+  // Define main domain patterns
+  const isMainDomain =
+    hostname === baseDomain || hostname === `www.${baseDomain}`;
+
+  // Always skip middleware for main domain paths that should be handled normally
   if (isMainDomain) {
-    // Always allow these paths on main domain to pass through
-    if (
-      url.pathname.startsWith("/account/") ||
-      url.pathname.startsWith("/login") ||
-      url.pathname.startsWith("/register") ||
-      url.pathname.startsWith("/auth/") ||
-      url.pathname.startsWith("/preview") ||
-      url.pathname.startsWith("/signup") ||
-      url.pathname.startsWith("/builder") ||
-      url.pathname.startsWith("/_next") ||
-      url.pathname.startsWith("/api") ||
-      url.pathname.startsWith("/favicon") ||
-      url.pathname === "/"
-    ) {
-      console.log("Allowing main domain path:", url.pathname);
+    const allowedPaths = [
+      "/account/",
+      "/login",
+      "/signup",
+      "/register",
+      "/auth/",
+      "/preview",
+      "/builder",
+      "/_next",
+      "/api",
+      "/favicon",
+      "/",
+    ];
+
+    const shouldSkip = allowedPaths.some((path) =>
+      path === "/" ? url.pathname === "/" : url.pathname.startsWith(path)
+    );
+
+    if (shouldSkip) {
       return NextResponse.next();
     }
   }
 
-  // Check if we're on a subdomain
-  if (
+  // Check if we're on a legitimate subdomain (not www, not main domain)
+  const isSubdomain =
     hostname.includes(".") &&
-    hostname.endsWith(baseDomain) &&
+    hostname.endsWith(`.${baseDomain}`) &&
     !hostname.startsWith("www.") &&
-    hostname !== baseDomain
-  ) {
+    hostname !== baseDomain;
+
+  if (isSubdomain) {
     const subdomain = hostname.replace(`.${baseDomain}`, "");
 
-    console.log("Processing subdomain:", subdomain);
-
-    // Skip if it's common subdomains that shouldn't be treated as site subdomains
-    if (
-      subdomain === "api" ||
-      subdomain === "admin" ||
-      subdomain === "www" ||
-      subdomain === "mail" ||
-      subdomain === "ftp"
-    ) {
+    // Skip reserved/system subdomains
+    const reservedSubdomains = [
+      "api",
+      "admin",
+      "www",
+      "mail",
+      "ftp",
+      "cdn",
+      "static",
+    ];
+    if (reservedSubdomains.includes(subdomain)) {
       return NextResponse.next();
     }
 
-    // Get auth token from different sources
+    // Get auth token from various sources
     let authToken =
       request.cookies.get("authToken")?.value ||
       request.cookies.get("token")?.value ||
       request.nextUrl.searchParams.get("token");
 
-    // Check if we have preserve_auth flag (from main domain redirect)
+    // Handle auth preservation from main domain redirects
     const preserveAuth = request.nextUrl.searchParams.get("preserve_auth");
     const tokenParam = request.nextUrl.searchParams.get("auth_token");
 
@@ -89,9 +97,8 @@ export async function middleware(request: NextRequest) {
       authToken = tokenParam;
     }
 
-    // For production, enforce authentication
+    // Enforce authentication in production
     if (process.env.NODE_ENV === "production") {
-      // If no token found, redirect to main domain for login
       if (!authToken) {
         const loginUrl = `${protocol}://www.${baseDomain}/login?redirect=${encodeURIComponent(
           `${protocol}://${hostname}${url.pathname}`
@@ -99,11 +106,8 @@ export async function middleware(request: NextRequest) {
         return NextResponse.redirect(loginUrl);
       }
 
-      // Verify token
       const isValidToken = await verifyToken(authToken);
-
       if (!isValidToken) {
-        // Token is invalid, redirect to main domain for login
         const loginUrl = `${protocol}://www.${baseDomain}/login?redirect=${encodeURIComponent(
           `${protocol}://${hostname}${url.pathname}`
         )}`;
@@ -111,13 +115,11 @@ export async function middleware(request: NextRequest) {
       }
     }
 
-    // Token is valid or we're in development, proceed with the request
+    // Set up response with auth cookie if needed
     const response = NextResponse.next();
-
-    // Set auth cookie for the subdomain if it doesn't exist and we have a token
     if (authToken && !request.cookies.get("authToken")?.value) {
       response.cookies.set("authToken", authToken, {
-        domain: `.${baseDomain}`, // This makes it available to all subdomains
+        domain: `.${baseDomain}`,
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         sameSite: "lax",
@@ -125,13 +127,12 @@ export async function middleware(request: NextRequest) {
       });
     }
 
-    // Handle routing for subdomain - CLEAN URLs
+    // Handle subdomain routing
     if (url.pathname === "/" || url.pathname === "") {
-      // Root path - rewrite to site-view with subdomain parameter
       url.pathname = "/site-view";
       url.searchParams.set("subdomain", subdomain);
 
-      // Clean up auth-related params from URL
+      // Clean auth params
       url.searchParams.delete("preserve_auth");
       url.searchParams.delete("auth_token");
       url.searchParams.delete("token");
@@ -139,26 +140,23 @@ export async function middleware(request: NextRequest) {
       return NextResponse.rewrite(url);
     }
 
-    // Handle page routing (e.g., /about, /contact, etc.)
-    // These are clean URLs for different pages of the site
+    // Handle subdomain page routing
     if (
       !url.pathname.startsWith("/site-view") &&
       !url.pathname.startsWith("/_next") &&
       !url.pathname.startsWith("/api") &&
       !url.pathname.startsWith("/favicon")
     ) {
-      const pagePath = url.pathname.replace(/^\//, ""); // Remove leading slash
+      const pagePath = url.pathname.replace(/^\//, "");
 
-      // Rewrite to site-view with the page path preserved
       url.pathname = "/site-view";
       url.searchParams.set("subdomain", subdomain);
 
-      // Add page parameter if it's not the root
-      if (pagePath && pagePath !== "") {
+      if (pagePath) {
         url.searchParams.set("page", pagePath);
       }
 
-      // Clean up auth-related params
+      // Clean auth params
       url.searchParams.delete("preserve_auth");
       url.searchParams.delete("auth_token");
       url.searchParams.delete("token");
@@ -166,14 +164,14 @@ export async function middleware(request: NextRequest) {
       return NextResponse.rewrite(url);
     }
 
-    // For paths that already start with /site-view, just add subdomain if missing
+    // Handle existing site-view paths
     if (
       url.pathname.startsWith("/site-view") &&
       !url.searchParams.has("subdomain")
     ) {
       url.searchParams.set("subdomain", subdomain);
 
-      // Clean up auth-related params
+      // Clean auth params
       url.searchParams.delete("preserve_auth");
       url.searchParams.delete("auth_token");
       url.searchParams.delete("token");
@@ -194,6 +192,6 @@ export const config = {
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
      */
-    "/((?!api|_next/static|_next/image|favicon.ico).+)",
+    "/((?!_next/static|_next/image|favicon.ico).*)",
   ],
 };
