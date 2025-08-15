@@ -99,25 +99,11 @@ export default function SiteCard({ site, userDomain }: SiteCardProps) {
     if (isProduction && baseDomain) {
       const siteSlug = site.name.toLowerCase().replace(/[^a-z0-9]/g, "-");
 
-      // Get current auth token to pass along
-      const authToken =
-        localStorage.getItem("authToken") ||
-        document.cookie
-          .split("; ")
-          .find((row) => row.startsWith("authToken="))
-          ?.split("=")[1];
+      // Create the cleanest possible URL - just the root domain
+      // The middleware will automatically handle everything
+      const liveUrl = `${protocol}://${siteSlug}.${baseDomain}`;
 
-      // Create the subdomain URL with auth preservation
-      let liveUrl = `${protocol}://${siteSlug}.${baseDomain}`;
-
-      // If user is authenticated, preserve the auth state
-      if (authToken) {
-        liveUrl += `?preserve_auth=true&auth_token=${encodeURIComponent(
-          authToken
-        )}`;
-      }
-
-      // Open the subdomain URL - this will be publicly accessible
+      // Open the clean root URL - middleware handles all the routing internally
       window.open(liveUrl, "_blank");
     } else {
       // For development, open preview
@@ -154,29 +140,29 @@ export default function SiteCard({ site, userDomain }: SiteCardProps) {
   const isProduction = process.env.NODE_ENV === "production";
 
   return (
-    <Card className="hover:shadow-lg transition-shadow border-gray-200 w-full max-w-full">
-      <CardHeader className="pb-3 px-4 sm:px-6">
-        <CardTitle className="text-lg sm:text-xl flex items-start sm:items-center justify-between flex-col sm:flex-row gap-2 sm:gap-0">
-          <span className="break-words w-full sm:w-auto">{site.name}</span>
-          <div className="flex items-center gap-2 self-start sm:self-center">
-            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-green-100 text-green-800 whitespace-nowrap">
+    <Card className="hover:shadow-lg transition-shadow border-gray-200">
+      <CardHeader className="pb-3">
+        <CardTitle className="text-lg flex items-center justify-between">
+          <span>{site.name}</span>
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-green-100 text-green-800">
               Live
             </span>
           </div>
         </CardTitle>
         <div className="space-y-3">
           {site.description && (
-            <p className="text-sm text-gray-600 line-clamp-3 sm:line-clamp-2 break-words">
+            <p className="text-sm text-gray-600 line-clamp-2">
               {site.description}
             </p>
           )}
 
           {/* Live Domain Display */}
           <div className="space-y-2">
-            <div className="flex items-start sm:items-center justify-between p-3 bg-gradient-to-r from-blue-50 to-green-50 rounded-lg border border-blue-200 gap-2">
-              <div className="flex-1 min-w-0">
+            <div className="flex items-center justify-between p-3 bg-gradient-to-r from-blue-50 to-green-50 rounded-lg border border-blue-200">
+              <div className="flex-1">
                 <p className="text-xs text-gray-600 mb-1">Live at:</p>
-                <p className="text-xs sm:text-sm font-mono text-blue-700 break-all leading-relaxed">
+                <p className="text-sm font-mono text-blue-700 break-all">
                   {userDomain}
                 </p>
               </div>
@@ -184,7 +170,7 @@ export default function SiteCard({ site, userDomain }: SiteCardProps) {
                 size="sm"
                 variant="ghost"
                 onClick={copyDomainToClipboard}
-                className="p-1 h-8 w-8 flex-shrink-0"
+                className="ml-2 p-1 h-8 w-8"
                 title="Copy domain"
               >
                 {copied ? (
@@ -203,125 +189,103 @@ export default function SiteCard({ site, userDomain }: SiteCardProps) {
           )}
         </div>
       </CardHeader>
-      <CardContent className="pt-0 px-4 sm:px-6">
-        {/* Responsive Button Layout */}
-        <div className="space-y-3">
-          {/* Primary Actions - Full width on mobile, grid on larger screens */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
-            <Button
-              size="sm"
-              onClick={openSiteBuilder}
-              className="bg-blue-600 hover:bg-blue-700 w-full justify-center"
-              disabled={deleteSiteMutation.isPending}
-            >
-              <Edit className="w-4 h-4 mr-2 sm:mr-1" />
-              <span className="sm:hidden lg:inline">Edit Site</span>
-              <span className="hidden sm:inline lg:hidden">Edit</span>
-            </Button>
+      <CardContent className="pt-0">
+        <div className="flex gap-2 flex-wrap">
+          <Button
+            size="sm"
+            onClick={openSiteBuilder}
+            className="flex-1 bg-blue-600 hover:bg-blue-700 min-w-0"
+            disabled={deleteSiteMutation.isPending}
+          >
+            <Edit className="w-4 h-4 mr-1" />
+            Edit
+          </Button>
 
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={previewSite}
-              className="w-full justify-center"
-              disabled={deleteSiteMutation.isPending}
-            >
-              <Eye className="w-4 h-4 mr-2 sm:mr-1" />
-              <span className="sm:hidden lg:inline">Preview</span>
-              <span className="hidden sm:inline lg:hidden">Preview</span>
-            </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={previewSite}
+            className="flex-1 min-w-0"
+            disabled={deleteSiteMutation.isPending}
+          >
+            <Eye className="w-4 h-4 mr-1" />
+            Preview
+          </Button>
 
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={openLiveSite}
-              className="bg-green-50 text-green-700 hover:bg-green-100 border-green-200 w-full justify-center"
-              disabled={deleteSiteMutation.isPending}
-              title={
-                isProduction
-                  ? "Open your live website - publicly accessible"
-                  : "Open preview site (development)"
-              }
-            >
-              <ExternalLink className="w-4 h-4 mr-2 sm:mr-1" />
-              <span className="sm:hidden lg:inline">Visit Site</span>
-              <span className="hidden sm:inline lg:hidden">Visit</span>
-            </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={openLiveSite}
+            className="flex-1 bg-green-50 text-green-700 hover:bg-green-100 border-green-200 min-w-0"
+            disabled={deleteSiteMutation.isPending}
+            title={
+              isProduction
+                ? "Open your live website"
+                : "Open preview site (development)"
+            }
+          >
+            <ExternalLink className="w-4 h-4 mr-1" />
+            Visit Site
+          </Button>
 
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200 w-full justify-center"
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button
+                size="sm"
+                variant="outline"
+                className="flex-1 text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200 min-w-0"
+                disabled={deleteSiteMutation.isPending}
+              >
+                {deleteSiteMutation.isPending ? (
+                  <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                ) : (
+                  <Trash2 className="w-4 h-4 mr-1" />
+                )}
+                Delete
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Delete Your Site?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This action cannot be undone. This will permanently delete
+                  your site &apos;{site.name}&apos; and the domain {userDomain}{" "}
+                  will no longer be accessible.
+                  <br />
+                  <br />
+                  <strong>Note:</strong> After deletion, you can create a new
+                  site with a different name.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel disabled={deleteSiteMutation.isPending}>
+                  Cancel
+                </AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={handleDelete}
+                  className="bg-red-600 hover:bg-red-700"
                   disabled={deleteSiteMutation.isPending}
                 >
                   {deleteSiteMutation.isPending ? (
                     <>
-                      <Loader2 className="w-4 h-4 mr-2 sm:mr-1 animate-spin" />
-                      <span className="sm:hidden">Deleting...</span>
-                      <span className="hidden sm:inline">Delete</span>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Deleting...
                     </>
                   ) : (
-                    <>
-                      <Trash2 className="w-4 h-4 mr-2 sm:mr-1" />
-                      <span className="sm:hidden lg:inline">Delete Site</span>
-                      <span className="hidden sm:inline lg:hidden">Delete</span>
-                    </>
+                    "Delete Site"
                   )}
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent className="mx-4 max-w-lg">
-                <AlertDialogHeader>
-                  <AlertDialogTitle className="text-base sm:text-lg">
-                    Delete Your Site?
-                  </AlertDialogTitle>
-                  <AlertDialogDescription className="text-sm leading-relaxed">
-                    This action cannot be undone. This will permanently delete
-                    your site &apos;{site.name}&apos; and the domain{" "}
-                    <span className="font-mono text-xs break-all">
-                      {userDomain}
-                    </span>{" "}
-                    will no longer be accessible.
-                    <br />
-                    <br />
-                    <strong>Note:</strong> After deletion, you can create a new
-                    site with a different name.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter className="flex-col sm:flex-row gap-2 sm:gap-0">
-                  <AlertDialogCancel
-                    disabled={deleteSiteMutation.isPending}
-                    className="w-full sm:w-auto"
-                  >
-                    Cancel
-                  </AlertDialogCancel>
-                  <AlertDialogAction
-                    onClick={handleDelete}
-                    className="bg-red-600 hover:bg-red-700 w-full sm:w-auto"
-                    disabled={deleteSiteMutation.isPending}
-                  >
-                    {deleteSiteMutation.isPending ? (
-                      <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        Deleting...
-                      </>
-                    ) : (
-                      "Delete Site"
-                    )}
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          </div>
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
 
         {/* Additional info */}
-        <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded text-xs leading-relaxed text-green-700">
-          <p className="font-medium mb-1">🌐 Your Website is Live!</p>
-          <p className="text-xs">
+        <div className="mt-3 p-2 bg-green-50 border border-green-200 rounded text-xs text-green-700">
+          <p className="font-medium">🌐 Your Website is Live!</p>
+          <p>
             {isProduction
-              ? "Your website is publicly accessible at the clean URL above. Anyone can visit it without logging in!"
+              ? "Visit your website directly at the clean URL above. No extra paths needed!"
               : "In development, the 'Visit Site' button opens the preview."}
           </p>
         </div>

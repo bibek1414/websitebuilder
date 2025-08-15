@@ -127,7 +127,8 @@ function SiteViewContent() {
             Site Not Found
           </h2>
           <p className="text-gray-600 mb-6">
-            The site &apos;{subdomain}&apos; could not be found or is not available.
+            The site &apos;{subdomain}&apos; could not be found or is not
+            available.
           </p>
           <Button
             onClick={() => {
