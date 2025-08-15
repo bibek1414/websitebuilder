@@ -19,6 +19,19 @@ export async function middleware(request: NextRequest) {
   const baseDomain = process.env.NEXT_PUBLIC_BASE_DOMAIN || "nepdora.com";
   const protocol = process.env.NEXT_PUBLIC_PROTOCOL || "https";
 
+  // IMPORTANT: Skip middleware for account-related routes on main domain
+  const url = request.nextUrl.clone();
+  if (
+    (hostname === `www.${baseDomain}` || hostname === baseDomain) &&
+    (url.pathname.startsWith("/account/") ||
+      url.pathname.startsWith("/login") ||
+      url.pathname.startsWith("/register") ||
+      url.pathname.startsWith("/auth/") ||
+      url.pathname.startsWith("/preview"))
+  ) {
+    return NextResponse.next();
+  }
+
   // Check if we're on a subdomain
   if (
     hostname.includes(".") &&
@@ -36,8 +49,6 @@ export async function middleware(request: NextRequest) {
     ) {
       return NextResponse.next();
     }
-
-    const url = request.nextUrl.clone();
 
     // Get auth token from different sources
     let authToken =
