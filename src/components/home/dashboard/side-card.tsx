@@ -24,7 +24,7 @@ import {
 } from "lucide-react";
 import { useDeleteSite } from "@/hooks/use-site";
 import { useAuth } from "@/hooks/use-auth";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { Site } from "@/types/site";
 
 interface SiteCardProps {
@@ -37,6 +37,46 @@ export default function SiteCard({ site, userDomain }: SiteCardProps) {
   const deleteSiteMutation = useDeleteSite();
   const { user, tokens } = useAuth();
   const [copied, setCopied] = useState(false);
+
+  // Store site metadata for subdomain resolution
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const metadataKey = `site_${site.id}_metadata`;
+      const currentMetadata = localStorage.getItem(metadataKey);
+
+      if (currentMetadata) {
+        try {
+          const data = JSON.parse(currentMetadata);
+          // Update with site name if missing
+          if (!data.siteName) {
+            const updatedMetadata = {
+              ...data,
+              siteName: site.name,
+            };
+            localStorage.setItem(metadataKey, JSON.stringify(updatedMetadata));
+          }
+        } catch (error) {
+          // Create new metadata if parsing fails
+          const newMetadata = {
+            pages: ["home"],
+            siteName: site.name,
+            siteId: site.id.toString(),
+            title: site.name,
+          };
+          localStorage.setItem(metadataKey, JSON.stringify(newMetadata));
+        }
+      } else {
+        // Create metadata if it doesn't exist
+        const newMetadata = {
+          pages: ["home"],
+          siteName: site.name,
+          siteId: site.id.toString(),
+          title: site.name,
+        };
+        localStorage.setItem(metadataKey, JSON.stringify(newMetadata));
+      }
+    }
+  }, [site.id, site.name]);
 
   const openSiteBuilder = () => {
     router.push(
@@ -58,18 +98,13 @@ export default function SiteCard({ site, userDomain }: SiteCardProps) {
 
     if (isProduction && baseDomain) {
       const siteSlug = site.name.toLowerCase().replace(/[^a-z0-9]/g, "-");
-      let liveUrl = `${protocol}://${siteSlug}.${baseDomain}`;
+      const liveUrl = `${protocol}://${siteSlug}.${baseDomain}`;
 
-      // Add auth parameters to ensure seamless login
-      if (tokens?.access_token && user) {
-        const separator = liveUrl.includes("?") ? "&" : "?";
-        liveUrl += `${separator}auth_token=${encodeURIComponent(
-          tokens.access_token
-        )}&user_data=${encodeURIComponent(JSON.stringify(user))}`;
-      }
-
+      // For production, open directly to the subdomain without query params
+      // The middleware will handle authentication
       window.open(liveUrl, "_blank");
     } else {
+      // For development, open preview
       previewSite();
     }
   };
@@ -87,6 +122,14 @@ export default function SiteCard({ site, userDomain }: SiteCardProps) {
   const handleDelete = async () => {
     try {
       await deleteSiteMutation.mutateAsync(site.id.toString());
+
+      // Clean up localStorage data when site is deleted
+      if (typeof window !== "undefined") {
+        const keysToRemove = Object.keys(localStorage).filter((key) =>
+          key.startsWith(`site_${site.id}_`)
+        );
+        keysToRemove.forEach((key) => localStorage.removeItem(key));
+      }
     } catch (error) {
       console.error("Error deleting site:", error);
     }
@@ -173,7 +216,11 @@ export default function SiteCard({ site, userDomain }: SiteCardProps) {
             onClick={openLiveSite}
             className="flex-1 bg-green-50 text-green-700 hover:bg-green-100 border-green-200 min-w-0"
             disabled={deleteSiteMutation.isPending}
-            title="Open live site with automatic login"
+            title={
+              isProduction
+                ? "Open live site on subdomain"
+                : "Open preview site (development)"
+            }
           >
             <ExternalLink className="w-4 h-4 mr-1" />
             Live
@@ -231,12 +278,13 @@ export default function SiteCard({ site, userDomain }: SiteCardProps) {
           </AlertDialog>
         </div>
 
-        {/* Additional info about cross-domain auth */}
+        {/* Additional info */}
         <div className="mt-3 p-2 bg-blue-50 border border-blue-200 rounded text-xs text-blue-700">
-          <p className="font-medium">✨ Seamless Access</p>
+          <p className="font-medium">🌐 Live Site</p>
           <p>
-            Click &quot;Live&quot; to visit your site with automatic login - no
-            need to sign in again!
+            {isProduction
+              ? "Your site is accessible directly at the subdomain URL."
+              : "In development, the Live button opens the preview."}
           </p>
         </div>
       </CardContent>

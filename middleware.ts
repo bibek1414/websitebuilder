@@ -1,4 +1,3 @@
-// middleware.ts
 import { NextRequest, NextResponse } from "next/server";
 import { jwtVerify } from "jose";
 
@@ -54,30 +53,33 @@ export async function middleware(request: NextRequest) {
       authToken = tokenParam;
     }
 
-    // If no token found, redirect to main domain for login
-    if (!authToken) {
-      const loginUrl = `${protocol}://www.${baseDomain}/login?redirect=${encodeURIComponent(
-        `${protocol}://${hostname}${url.pathname}`
-      )}`;
-      return NextResponse.redirect(loginUrl);
+    // For production, enforce authentication
+    if (process.env.NODE_ENV === "production") {
+      // If no token found, redirect to main domain for login
+      if (!authToken) {
+        const loginUrl = `${protocol}://www.${baseDomain}/login?redirect=${encodeURIComponent(
+          `${protocol}://${hostname}${url.pathname}`
+        )}`;
+        return NextResponse.redirect(loginUrl);
+      }
+
+      // Verify token
+      const isValidToken = await verifyToken(authToken);
+
+      if (!isValidToken) {
+        // Token is invalid, redirect to main domain for login
+        const loginUrl = `${protocol}://www.${baseDomain}/login?redirect=${encodeURIComponent(
+          `${protocol}://${hostname}${url.pathname}`
+        )}`;
+        return NextResponse.redirect(loginUrl);
+      }
     }
 
-    // Verify token
-    const isValidToken = await verifyToken(authToken);
-
-    if (!isValidToken) {
-      // Token is invalid, redirect to main domain for login
-      const loginUrl = `${protocol}://www.${baseDomain}/login?redirect=${encodeURIComponent(
-        `${protocol}://${hostname}${url.pathname}`
-      )}`;
-      return NextResponse.redirect(loginUrl);
-    }
-
-    // Token is valid, proceed with the request
+    // Token is valid or we're in development, proceed with the request
     const response = NextResponse.next();
 
-    // Set auth cookie for the subdomain if it doesn't exist
-    if (!request.cookies.get("authToken")?.value && authToken) {
+    // Set auth cookie for the subdomain if it doesn't exist and we have a token
+    if (authToken && !request.cookies.get("authToken")?.value) {
       response.cookies.set("authToken", authToken, {
         domain: `.${baseDomain}`, // This makes it available to all subdomains
         httpOnly: true,
@@ -87,8 +89,9 @@ export async function middleware(request: NextRequest) {
       });
     }
 
-    // If accessing root of subdomain, redirect to site view
+    // Handle routing for subdomain
     if (url.pathname === "/" || url.pathname === "") {
+      // Root path - redirect to site view with subdomain parameter
       url.pathname = "/site-view";
       url.searchParams.set("subdomain", subdomain);
 
@@ -100,9 +103,36 @@ export async function middleware(request: NextRequest) {
       return NextResponse.rewrite(url);
     }
 
-    // For other paths on subdomain
-    if (!url.pathname.startsWith("/site-view")) {
-      url.pathname = `/site-view${url.pathname}`;
+    // Handle page routing (e.g., /about, /contact, etc.)
+    if (
+      !url.pathname.startsWith("/site-view") &&
+      !url.pathname.startsWith("/_next") &&
+      !url.pathname.startsWith("/api")
+    ) {
+      const pagePath = url.pathname.replace(/^\//, ""); // Remove leading slash
+
+      // Rewrite to site-view with the page path preserved
+      url.pathname = "/site-view";
+      url.searchParams.set("subdomain", subdomain);
+
+      // Add page parameter if it's not the root
+      if (pagePath && pagePath !== "") {
+        url.searchParams.set("page", pagePath);
+      }
+
+      // Clean up auth-related params
+      url.searchParams.delete("preserve_auth");
+      url.searchParams.delete("auth_token");
+      url.searchParams.delete("token");
+
+      return NextResponse.rewrite(url);
+    }
+
+    // For paths that already start with /site-view, just add subdomain if missing
+    if (
+      url.pathname.startsWith("/site-view") &&
+      !url.searchParams.has("subdomain")
+    ) {
       url.searchParams.set("subdomain", subdomain);
 
       // Clean up auth-related params
