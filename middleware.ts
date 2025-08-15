@@ -83,7 +83,10 @@ export async function middleware(request: NextRequest) {
       return NextResponse.next();
     }
 
-    // Get auth token from various sources
+    // For subdomain sites, we don't require authentication for viewing
+    // The site should be publicly accessible
+
+    // However, if there are auth tokens, we should preserve them for admin functions
     let authToken =
       request.cookies.get("authToken")?.value ||
       request.cookies.get("token")?.value ||
@@ -97,50 +100,52 @@ export async function middleware(request: NextRequest) {
       authToken = tokenParam;
     }
 
-    // Enforce authentication in production
-    if (process.env.NODE_ENV === "production") {
-      if (!authToken) {
-        const loginUrl = `${protocol}://www.${baseDomain}/login?redirect=${encodeURIComponent(
-          `${protocol}://${hostname}${url.pathname}`
-        )}`;
-        return NextResponse.redirect(loginUrl);
-      }
-
-      const isValidToken = await verifyToken(authToken);
-      if (!isValidToken) {
-        const loginUrl = `${protocol}://www.${baseDomain}/login?redirect=${encodeURIComponent(
-          `${protocol}://${hostname}${url.pathname}`
-        )}`;
-        return NextResponse.redirect(loginUrl);
-      }
-    }
-
-    // Set up response with auth cookie if needed
+    // Set up response with auth cookie if needed (but don't require it)
     const response = NextResponse.next();
     if (authToken && !request.cookies.get("authToken")?.value) {
-      response.cookies.set("authToken", authToken, {
-        domain: `.${baseDomain}`,
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
-        maxAge: 60 * 60 * 24 * 7, // 7 days
-      });
+      // Only set cookie if token is valid
+      const isValidToken = await verifyToken(authToken);
+      if (isValidToken) {
+        response.cookies.set("authToken", authToken, {
+          domain: `.${baseDomain}`,
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: "lax",
+          maxAge: 60 * 60 * 24 * 7, // 7 days
+        });
+      }
     }
 
-    // Handle subdomain routing
+    // Handle subdomain routing - rewrite to site-view page
     if (url.pathname === "/" || url.pathname === "") {
       url.pathname = "/site-view";
       url.searchParams.set("subdomain", subdomain);
 
-      // Clean auth params
+      // Clean auth params from URL (keep them in cookies)
       url.searchParams.delete("preserve_auth");
       url.searchParams.delete("auth_token");
       url.searchParams.delete("token");
 
-      return NextResponse.rewrite(url);
+      const rewriteResponse = NextResponse.rewrite(url);
+
+      // Copy cookies from the original response
+      if (authToken && !request.cookies.get("authToken")?.value) {
+        const isValidToken = await verifyToken(authToken);
+        if (isValidToken) {
+          rewriteResponse.cookies.set("authToken", authToken, {
+            domain: `.${baseDomain}`,
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "lax",
+            maxAge: 60 * 60 * 24 * 7, // 7 days
+          });
+        }
+      }
+
+      return rewriteResponse;
     }
 
-    // Handle subdomain page routing
+    // Handle subdomain page routing (for pages like /about, /contact, etc.)
     if (
       !url.pathname.startsWith("/site-view") &&
       !url.pathname.startsWith("/_next") &&
@@ -161,7 +166,23 @@ export async function middleware(request: NextRequest) {
       url.searchParams.delete("auth_token");
       url.searchParams.delete("token");
 
-      return NextResponse.rewrite(url);
+      const rewriteResponse = NextResponse.rewrite(url);
+
+      // Copy cookies if valid token exists
+      if (authToken && !request.cookies.get("authToken")?.value) {
+        const isValidToken = await verifyToken(authToken);
+        if (isValidToken) {
+          rewriteResponse.cookies.set("authToken", authToken, {
+            domain: `.${baseDomain}`,
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "lax",
+            maxAge: 60 * 60 * 24 * 7, // 7 days
+          });
+        }
+      }
+
+      return rewriteResponse;
     }
 
     // Handle existing site-view paths

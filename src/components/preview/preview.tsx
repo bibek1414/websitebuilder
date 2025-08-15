@@ -108,14 +108,18 @@ class PreviewStorageManager {
     return null;
   }
 
-  loadSiteMetadata(): { pages: string[]; title?: string } {
+  loadSiteMetadata(): { pages: string[]; title?: string; siteName?: string } {
     if (typeof window !== "undefined") {
       const key = `site_${this.siteId}_metadata`;
       const stored = localStorage.getItem(key);
       if (stored) {
         try {
           const data = JSON.parse(stored);
-          return { pages: data.pages || ["home"], title: data.title };
+          return { 
+            pages: data.pages || ["home"], 
+            title: data.title,
+            siteName: data.siteName
+          };
         } catch (error) {
           return { pages: ["home"] };
         }
@@ -226,6 +230,33 @@ const slugToPageName = (
   return foundPage || "home";
 };
 
+// Check if we're on a subdomain
+const isSubdomain = (): boolean => {
+  if (typeof window === "undefined") return false;
+  
+  const hostname = window.location.hostname;
+  const baseDomain = process.env.NEXT_PUBLIC_BASE_DOMAIN || "nepdora.com";
+  
+  return hostname.includes(".") && 
+         hostname.endsWith(`.${baseDomain}`) && 
+         !hostname.startsWith("www.") && 
+         hostname !== baseDomain;
+};
+
+// Get current subdomain
+const getCurrentSubdomain = (): string | null => {
+  if (typeof window === "undefined") return null;
+  
+  const hostname = window.location.hostname;
+  const baseDomain = process.env.NEXT_PUBLIC_BASE_DOMAIN || "nepdora.com";
+  
+  if (isSubdomain()) {
+    return hostname.replace(`.${baseDomain}`, "");
+  }
+  
+  return null;
+};
+
 interface EnhancedComponentRendererProps {
   component: Component;
   siteId: string;
@@ -254,10 +285,26 @@ function EnhancedComponentRenderer({
 
       if (matchingPage) {
         const slug = pageNameToSlug(matchingPage);
-        return {
-          ...link,
-          href: `/preview?site=${siteId}&page=${slug}`,
-        };
+        
+        if (isSubdomain()) {
+          // For subdomain, use clean URLs
+          const href = slug === "home" ? "/" : `/${slug}`;
+          return {
+            ...link,
+            href,
+            onClick: (e: React.MouseEvent) => {
+              e.preventDefault();
+              // Navigate using window.location for clean subdomain URLs
+              window.location.href = href;
+            },
+          };
+        } else {
+          // For preview mode, use query parameters
+          return {
+            ...link,
+            href: `/preview?site=${siteId}&page=${slug}`,
+          };
+        }
       }
 
       return link;
