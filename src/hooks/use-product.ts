@@ -5,13 +5,15 @@ import {
   CreateProductRequest,
   UpdateProductRequest,
   Product,
+  PaginationParams,
 } from "@/types/product";
 
-export const useProducts = (page = 1, limit = 10) => {
+export const useProducts = (params: PaginationParams = {}) => {
   return useQuery({
-    queryKey: ["products", page, limit],
-    queryFn: () => useProductApi.getProducts(page, limit),
+    queryKey: ["products", params],
+    queryFn: () => useProductApi.getProducts(params),
     staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
   });
 };
 
@@ -30,6 +32,7 @@ export const useCreateProduct = () => {
     mutationFn: (data: CreateProductRequest) =>
       useProductApi.createProduct(data),
     onSuccess: (response) => {
+      // Invalidate all product queries to refresh pagination
       queryClient.invalidateQueries({ queryKey: ["products"] });
       toast.success(response.message);
     },
@@ -50,6 +53,7 @@ export const useUpdateProduct = () => {
     mutationFn: ({ id, data }: { id: number; data: UpdateProductRequest }) =>
       useProductApi.updateProduct(id, data),
     onSuccess: (response, variables) => {
+      // Invalidate all product queries and specific product
       queryClient.invalidateQueries({ queryKey: ["products"] });
       queryClient.invalidateQueries({ queryKey: ["product", variables.id] });
       toast.success(response.message);
@@ -58,7 +62,7 @@ export const useUpdateProduct = () => {
       if (error instanceof Error) {
         toast.error(error.message);
       } else {
-        toast.error("Failed to Update product");
+        toast.error("Failed to update product");
       }
     },
   });
@@ -70,6 +74,7 @@ export const useDeleteProduct = () => {
   return useMutation({
     mutationFn: (id: number) => useProductApi.deleteProduct(id),
     onSuccess: (response) => {
+      // Invalidate all product queries to refresh pagination
       queryClient.invalidateQueries({ queryKey: ["products"] });
       toast.success(response.message);
     },
@@ -77,7 +82,7 @@ export const useDeleteProduct = () => {
       if (error instanceof Error) {
         toast.error(error.message);
       } else {
-        toast.error("Failed to Delete product");
+        toast.error("Failed to delete product");
       }
     },
   });

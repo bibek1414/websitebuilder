@@ -4,7 +4,7 @@ const nextConfig = {
 
   // Allow loading images from cdn.dummyjson.com
   images: {
-    domains: ["cdn.dummyjson.com"],
+    domains: ["cdn.dummyjson.com","images.unsplash.com"],
   },
 
   // For subdomain routing

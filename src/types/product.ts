@@ -1,3 +1,4 @@
+// types/product.ts
 import { z } from "zod";
 
 // Product Schema
@@ -17,11 +18,30 @@ export type Product = z.infer<typeof ProductSchema>;
 export type CreateProductRequest = z.infer<typeof CreateProductSchema>;
 export type UpdateProductRequest = z.infer<typeof UpdateProductSchema>;
 
-export interface GetProductsResponse {
-  data: Product[];
-  total: number;
+// Enhanced pagination interfaces
+export interface PaginationParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+  sortBy?: string;
+  sortOrder?: "asc" | "desc";
+}
+
+export interface PaginationInfo {
   page: number;
   limit: number;
+  total: number;
+  totalPages: number;
+  hasNext: boolean;
+  hasPrevious: boolean;
+}
+
+export interface GetProductsResponse {
+  results: Product[];
+  count: number;
+  next: string | null;
+  previous: string | null;
+  pagination: PaginationInfo;
 }
 
 export interface CreateProductResponse {

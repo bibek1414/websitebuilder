@@ -1,7 +1,7 @@
 import React from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useProduct } from "@/hooks/use-products";
+import { useProduct } from "@/hooks/use-product";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
@@ -35,15 +35,23 @@ interface ProductDetailProps {
   siteId?: string;
 }
 
-export const ProductDetail: React.FC<ProductDetailProps> = ({ productId, siteId }) => {
-  const { data: product, isLoading, error } = useProduct(productId);
+export const ProductDetail: React.FC<ProductDetailProps> = ({
+  productId,
+  siteId,
+}) => {
+  const { data: product, isLoading, error } = useProduct(parseInt(productId));
   const [selectedImage, setSelectedImage] = React.useState<string | null>(null);
 
+  // Mock image placeholder since the API product structure doesn't include images
+  const mockImage =
+    "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&h=400&fit=crop";
+
   React.useEffect(() => {
-    if (product?.thumbnail) {
-      setSelectedImage(product.thumbnail);
+    if (product && !selectedImage) {
+      // Since API product doesn't have images, use a placeholder
+      setSelectedImage(mockImage);
     }
-  }, [product]);
+  }, [product, selectedImage]);
 
   if (isLoading) {
     return (
@@ -115,10 +123,20 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ productId, siteId 
     );
   }
 
-  const discountedPrice = (
-    product.price *
-    (1 - product.discountPercentage / 100)
-  ).toFixed(2);
+  // Generate mock images array for the gallery
+  const mockImages = [
+    mockImage,
+    "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&h=400&fit=crop&crop=top",
+    "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&h=400&fit=crop&crop=left",
+    "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&h=400&fit=crop&crop=right",
+    "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&h=400&fit=crop&crop=bottom",
+  ];
+
+  // Parse price to float for calculations
+  const price = parseFloat(product.price);
+  const discountPercentage = 15; // Mock discount since API doesn't provide it
+  const discountedPrice = (price * (1 - discountPercentage / 100)).toFixed(2);
+  const rating = 4.5; // Mock rating since API doesn't provide it
 
   return (
     <div className="bg-background">
@@ -148,7 +166,7 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ productId, siteId 
             <BreadcrumbSeparator />
             <BreadcrumbItem>
               <BreadcrumbPage className="text-foreground font-medium">
-                {product.title}
+                {product.name}
               </BreadcrumbPage>
             </BreadcrumbItem>
           </BreadcrumbList>
@@ -160,14 +178,14 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ productId, siteId 
               {selectedImage && (
                 <Image
                   src={selectedImage}
-                  alt={product.title}
+                  alt={product.name}
                   fill
                   className="object-contain"
                 />
               )}
             </div>
             <div className="grid grid-cols-5 gap-2 mt-4">
-              {product.images.slice(0, 5).map((img, idx) => (
+              {mockImages.slice(0, 5).map((img, idx) => (
                 <button
                   key={idx}
                   onClick={() => setSelectedImage(img)}
@@ -179,7 +197,7 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ productId, siteId 
                 >
                   <Image
                     src={img}
-                    alt={`${product.title} thumbnail ${idx + 1}`}
+                    alt={`${product.name} thumbnail ${idx + 1}`}
                     fill
                     className="object-cover"
                   />
@@ -190,10 +208,10 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ productId, siteId 
 
           <div className="flex flex-col">
             <Badge variant="secondary" className="w-fit capitalize">
-              {product.category}
+              Electronics
             </Badge>
             <h1 className="text-3xl md:text-4xl font-bold mt-2 text-foreground">
-              {product.title}
+              {product.name}
             </h1>
             <div className="flex items-center gap-2 mt-2">
               <div className="flex items-center">
@@ -201,7 +219,7 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ productId, siteId 
                   <Star
                     key={i}
                     className={`w-5 h-5 ${
-                      i < Math.round(product.rating)
+                      i < Math.round(rating)
                         ? "text-yellow-500 fill-yellow-500"
                         : "text-muted-foreground"
                     }`}
@@ -209,7 +227,7 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ productId, siteId 
                 ))}
               </div>
               <span className="text-muted-foreground text-sm">
-                {product.rating} ({product.reviews?.length || 0} reviews)
+                {rating} (42 reviews)
               </span>
             </div>
 
@@ -218,10 +236,10 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ productId, siteId 
                 ${discountedPrice}
               </span>
               <span className="text-xl text-muted-foreground line-through ml-3">
-                ${product.price.toFixed(2)}
+                ${price.toFixed(2)}
               </span>
               <Badge variant="destructive" className="ml-3">
-                {product.discountPercentage.toFixed(0)}% OFF
+                {discountPercentage}% OFF
               </Badge>
             </div>
 
@@ -230,8 +248,21 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ productId, siteId 
             </p>
 
             <div className="mt-6">
-              <Button size="lg" className="w-full">
-                Add to Cart
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-sm text-muted-foreground">Stock:</span>
+                <Badge variant={product.stock > 0 ? "default" : "destructive"}>
+                  {product.stock > 0
+                    ? `${product.stock} available`
+                    : "Out of stock"}
+                </Badge>
+              </div>
+
+              <Button
+                size="lg"
+                className="w-full"
+                disabled={product.stock === 0}
+              >
+                {product.stock > 0 ? "Add to Cart" : "Out of Stock"}
               </Button>
             </div>
 
@@ -245,54 +276,93 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ productId, siteId 
               <div className="flex flex-col items-center gap-2 p-4 rounded-lg bg-muted/50">
                 <ShieldCheck className="w-6 h-6 text-primary" />
                 <span className="font-medium text-foreground">
-                  {product.warrantyInformation || "1 Year Warranty"}
+                  1 Year Warranty
                 </span>
               </div>
               <div className="flex flex-col items-center gap-2 p-4 rounded-lg bg-muted/50">
                 <PackageCheck className="w-6 h-6 text-primary" />
                 <span className="font-medium text-green-600">
-                  {product.availabilityStatus || "In Stock"}
+                  {product.stock > 0 ? "In Stock" : "Out of Stock"}
                 </span>
               </div>
             </div>
 
             <Accordion type="single" collapsible className="w-full mt-6">
-              <AccordionItem value="reviews">
-                <AccordionTrigger>Reviews</AccordionTrigger>
+              <AccordionItem value="specifications">
+                <AccordionTrigger>Product Specifications</AccordionTrigger>
                 <AccordionContent>
-                  {product.reviews && product.reviews.length > 0 ? (
-                    product.reviews.map((review, index) => (
-                      <div
-                        key={index}
-                        className="border-b border-border last:border-b-0 py-3"
-                      >
-                        <div className="flex items-center justify-between">
-                          <span className="font-semibold text-foreground">
-                            {review.reviewerName}
-                          </span>
-                          <div className="flex items-center">
-                            {[...Array(5)].map((_, i) => (
-                              <Star
-                                key={i}
-                                className={`w-4 h-4 ${
-                                  i < review.rating
-                                    ? "text-yellow-500 fill-yellow-500"
-                                    : "text-muted-foreground"
-                                }`}
-                              />
-                            ))}
-                          </div>
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span className="font-medium">Product ID:</span>
+                      <span className="text-muted-foreground">
+                        {product.id}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="font-medium">Price:</span>
+                      <span className="text-muted-foreground">
+                        ${product.price}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="font-medium">Stock:</span>
+                      <span className="text-muted-foreground">
+                        {product.stock} units
+                      </span>
+                    </div>
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+              <AccordionItem value="reviews">
+                <AccordionTrigger>Customer Reviews</AccordionTrigger>
+                <AccordionContent>
+                  <div className="space-y-4">
+                    {/* Mock reviews since API doesn't provide them */}
+                    <div className="border-b border-border last:border-b-0 pb-3">
+                      <div className="flex items-center justify-between">
+                        <span className="font-semibold text-foreground">
+                          John Doe
+                        </span>
+                        <div className="flex items-center">
+                          {[...Array(5)].map((_, i) => (
+                            <Star
+                              key={i}
+                              className={`w-4 h-4 ${
+                                i < 5
+                                  ? "text-yellow-500 fill-yellow-500"
+                                  : "text-muted-foreground"
+                              }`}
+                            />
+                          ))}
                         </div>
-                        <p className="text-muted-foreground mt-1 text-sm">
-                          {review.comment}
-                        </p>
                       </div>
-                    ))
-                  ) : (
-                    <p className="text-muted-foreground">
-                      No reviews available yet.
-                    </p>
-                  )}
+                      <p className="text-muted-foreground mt-1 text-sm">
+                        Excellent product! Great quality and fast delivery.
+                      </p>
+                    </div>
+                    <div className="border-b border-border last:border-b-0 pb-3">
+                      <div className="flex items-center justify-between">
+                        <span className="font-semibold text-foreground">
+                          Jane Smith
+                        </span>
+                        <div className="flex items-center">
+                          {[...Array(5)].map((_, i) => (
+                            <Star
+                              key={i}
+                              className={`w-4 h-4 ${
+                                i < 4
+                                  ? "text-yellow-500 fill-yellow-500"
+                                  : "text-muted-foreground"
+                              }`}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                      <p className="text-muted-foreground mt-1 text-sm">
+                        Very satisfied with this purchase. Highly recommended!
+                      </p>
+                    </div>
+                  </div>
                 </AccordionContent>
               </AccordionItem>
             </Accordion>

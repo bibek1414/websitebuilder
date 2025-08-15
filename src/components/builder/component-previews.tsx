@@ -17,7 +17,7 @@ import { ProductCard1 } from "@/components/products/product-card1";
 import { ProductCard2 } from "@/components/products/product-card2";
 import { ProductCard3 } from "@/components/products/product-card3";
 import { Button } from "@/components/ui/button";
-import { useProducts } from "@/hooks/use-products";
+import { useProducts } from "@/hooks/use-product";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertTriangle } from "lucide-react";
@@ -69,7 +69,7 @@ export const ComponentPreviews: React.FC<ComponentPreviewsProps> = ({
     data: productResponse,
     isLoading: isLoadingProducts,
     isError: isErrorProducts,
-  } = useProducts(3);
+  } = useProducts()
 
   const getDialogTitle = () => {
     if (!componentType) return "";
@@ -117,19 +117,26 @@ export const ComponentPreviews: React.FC<ComponentPreviewsProps> = ({
       );
     }
 
-    const products = productResponse?.products || [];
+    // Fix: Change from productResponse?.data to productResponse?.results
+    const products = productResponse?.results || [];
 
-    if (products.length < 3) {
+    // Modified: Allow previews even with fewer than 3 products
+    if (products.length === 0) {
       return (
         <Alert>
           <AlertTriangle className="h-4 w-4" />
-          <AlertTitle>Not Enough Data</AlertTitle>
+          <AlertTitle>No Products Found</AlertTitle>
           <AlertDescription>
-            Could not fetch enough product data to display all previews.
+            No product data available to display previews.
           </AlertDescription>
         </Alert>
       );
     }
+
+    // Use available products (repeat if necessary for previews)
+    const getProductForPreview = (index: number) => {
+      return products[index % products.length];
+    };
 
     return (
       <div className="space-y-4">
@@ -138,7 +145,7 @@ export const ComponentPreviews: React.FC<ComponentPreviewsProps> = ({
           onClick={() => onSelect("products", "style-1")}
         >
           <div className="p-4 w-full max-w-md">
-            <ProductCard1 product={products[0]} />
+            <ProductCard1 product={getProductForPreview(0)} />
           </div>
         </PreviewCard>
 
@@ -147,7 +154,7 @@ export const ComponentPreviews: React.FC<ComponentPreviewsProps> = ({
           onClick={() => onSelect("products", "style-2")}
         >
           <div className="p-4 w-full max-w-md">
-            <ProductCard2 product={products[1]} />
+            <ProductCard2 product={getProductForPreview(1)} />
           </div>
         </PreviewCard>
 
@@ -156,7 +163,7 @@ export const ComponentPreviews: React.FC<ComponentPreviewsProps> = ({
           onClick={() => onSelect("products", "style-3")}
         >
           <div className="p-4 w-full max-w-md">
-            <ProductCard3 product={products[2]} />
+            <ProductCard3 product={getProductForPreview(2)} />
           </div>
         </PreviewCard>
       </div>
@@ -186,6 +193,7 @@ export const ComponentPreviews: React.FC<ComponentPreviewsProps> = ({
       </div>
     );
   };
+
   const renderAboutUsPreviews = () => {
     return (
       <div className="space-y-4">
@@ -209,6 +217,7 @@ export const ComponentPreviews: React.FC<ComponentPreviewsProps> = ({
       </div>
     );
   };
+
   const renderPreviews = () => {
     switch (componentType) {
       case "hero":

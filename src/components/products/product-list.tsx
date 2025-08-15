@@ -1,13 +1,13 @@
 import React from "react";
 import { Component, ComponentUpdateData } from "@/components/component-renders";
-import { useProducts } from "@/hooks/use-products";
+import { useProducts } from "@/hooks/use-product";
 import { ProductCard1 } from "./product-card1";
 import { ProductCard2 } from "./product-card2";
 import { ProductCard3 } from "./product-card3";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle, Eye } from "lucide-react";
-import { Product } from "@/types/products";
+import { AlertCircle } from "lucide-react";
+import { Product } from "@/types/product";
 
 interface ProductsListProps {
   component: Component;
@@ -23,10 +23,18 @@ export const ProductsList: React.FC<ProductsListProps> = ({
 }) => {
   const { limit = 8, title = "Featured Products" } =
     component.productsData || {};
-  const { data, isLoading, error } = useProducts(limit);
 
-  // Extract products from the response data
-  const products = data?.products || [];
+  // Calculate page size and get first page for the limit
+  const pageSize = Math.min(limit, 50); // API might have max limit
+  const { data, isLoading, error } = useProducts({
+    page: 1,
+    limit: pageSize,
+  });
+
+  // Extract products from the API response structure
+  const products = data?.results || [];
+  const totalProducts = data?.count || 0;
+  const pagination = data?.pagination;
 
   const renderProductCard = (
     product: Product,
@@ -66,6 +74,7 @@ export const ProductsList: React.FC<ProductsListProps> = ({
             <span>Style: {component.style || "style-1"}</span>
             <span>Limit: {limit}</span>
             <span>Title: {title}</span>
+            {pagination && <span>Total: {pagination.total} products</span>}
           </div>
         </div>
 
@@ -95,8 +104,9 @@ export const ProductsList: React.FC<ProductsListProps> = ({
                 <AlertCircle className="h-4 w-4" />
                 <AlertTitle>Error</AlertTitle>
                 <AlertDescription>
-                  {error.message ||
-                    "Failed to load products. Please try again later."}
+                  {error instanceof Error
+                    ? error.message
+                    : "Failed to load products. Please try again later."}
                 </AlertDescription>
               </Alert>
             )}
@@ -126,6 +136,7 @@ export const ProductsList: React.FC<ProductsListProps> = ({
               <div className="text-center mt-4 p-2 bg-muted/50 rounded-md">
                 <p className="text-xs text-muted-foreground">
                   Showing 4 of {products.length} products in builder preview
+                  {pagination && ` (${pagination.total} total)`}
                 </p>
               </div>
             )}
@@ -136,7 +147,7 @@ export const ProductsList: React.FC<ProductsListProps> = ({
   }
 
   return (
-    <div className="py-8 md:py-12 ">
+    <div className="py-8 md:py-12">
       <div className="container mx-auto px-4 max-w-7xl">
         <h2 className="text-3xl font-bold tracking-tight text-center mb-8 text-foreground">
           {title}
@@ -161,15 +172,16 @@ export const ProductsList: React.FC<ProductsListProps> = ({
             <AlertCircle className="h-4 w-4" />
             <AlertTitle>Error</AlertTitle>
             <AlertDescription>
-              {error.message ||
-                "Failed to load products. Please try again later."}
+              {error instanceof Error
+                ? error.message
+                : "Failed to load products. Please try again later."}
             </AlertDescription>
           </Alert>
         )}
 
         {!isLoading && !error && products.length > 0 && (
           <div className={`grid ${gridStyle} gap-6`}>
-            {products.map((product) => (
+            {products.slice(0, limit).map((product) => (
               <div key={product.id}>{renderProductCard(product, false)}</div>
             ))}
           </div>
@@ -178,6 +190,18 @@ export const ProductsList: React.FC<ProductsListProps> = ({
         {!isLoading && !error && products.length === 0 && (
           <div className="text-center py-8">
             <p className="text-muted-foreground">No products found.</p>
+          </div>
+        )}
+
+        {/* Show pagination info if there are more products than displayed */}
+        {!isLoading && !error && pagination && pagination.total > limit && (
+          <div className="text-center mt-8 p-3 bg-muted/50 rounded-md">
+            <p className="text-sm text-muted-foreground">
+              Showing {Math.min(limit, products.length)} of {pagination.total}{" "}
+              products
+              {pagination.totalPages > 1 &&
+                ` (Page 1 of ${pagination.totalPages})`}
+            </p>
           </div>
         )}
       </div>
