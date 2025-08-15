@@ -19,33 +19,58 @@ export async function middleware(request: NextRequest) {
   const baseDomain = process.env.NEXT_PUBLIC_BASE_DOMAIN || "nepdora.com";
   const protocol = process.env.NEXT_PUBLIC_PROTOCOL || "https";
 
+  console.log("Middleware Debug:", {
+    hostname,
+    baseDomain,
+    pathname: request.nextUrl.pathname,
+    isMainDomain: hostname === `www.${baseDomain}` || hostname === baseDomain,
+  });
+
   // IMPORTANT: Skip middleware for account-related routes on main domain
   const url = request.nextUrl.clone();
-  if (
-    (hostname === `www.${baseDomain}` || hostname === baseDomain) &&
-    (url.pathname.startsWith("/account/") ||
+
+  // Check if we're on the main domain (including www)
+  const isMainDomain =
+    hostname === `www.${baseDomain}` || hostname === baseDomain;
+
+  if (isMainDomain) {
+    // Always allow these paths on main domain to pass through
+    if (
+      url.pathname.startsWith("/account/") ||
       url.pathname.startsWith("/login") ||
       url.pathname.startsWith("/register") ||
       url.pathname.startsWith("/auth/") ||
-      url.pathname.startsWith("/preview"))
-  ) {
-    return NextResponse.next();
+      url.pathname.startsWith("/preview") ||
+      url.pathname.startsWith("/signup") ||
+      url.pathname.startsWith("/builder") ||
+      url.pathname.startsWith("/_next") ||
+      url.pathname.startsWith("/api") ||
+      url.pathname.startsWith("/favicon") ||
+      url.pathname === "/"
+    ) {
+      console.log("Allowing main domain path:", url.pathname);
+      return NextResponse.next();
+    }
   }
 
   // Check if we're on a subdomain
   if (
     hostname.includes(".") &&
     hostname.endsWith(baseDomain) &&
-    !hostname.startsWith("www.")
+    !hostname.startsWith("www.") &&
+    hostname !== baseDomain
   ) {
     const subdomain = hostname.replace(`.${baseDomain}`, "");
 
-    // Skip if it's the main domain or common subdomains
+    console.log("Processing subdomain:", subdomain);
+
+    // Skip if it's common subdomains that shouldn't be treated as site subdomains
     if (
-      subdomain === baseDomain ||
       subdomain === "api" ||
       subdomain === "admin" ||
-      subdomain === "www"
+      subdomain === "www" ||
+      subdomain === "mail" ||
+      subdomain === "ftp"
     ) {
       return NextResponse.next();
     }
@@ -161,5 +186,14 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
+  matcher: [
+    /*
+     * Match all request paths except for the ones starting with:
+     * - api (API routes)
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     */
+    "/((?!api|_next/static|_next/image|favicon.ico).+)",
+  ],
 };
