@@ -5,7 +5,7 @@ import { ActionButtons, ActionButton } from "./action-buttons";
 import { MobileMenu } from "./mobile-menu";
 import { Menu } from "lucide-react";
 import { Input } from "../ui/input";
-
+import { CartIcon } from "./cart-icon";
 interface NavbarData {
   links: NavLink[];
   buttons: ActionButton[];
@@ -163,9 +163,11 @@ export function Navbar1({
               onUpdateButton={handleUpdateButton}
               onRemoveButton={handleRemoveButton}
             />
+            <CartIcon />
           </div>
 
           <div className="md:hidden">
+            <CartIcon />
             <Button
               variant="ghost"
               size="sm"

@@ -4,6 +4,7 @@ import "./globals.css";
 import { QueryProvider } from "@/providers/query-provider";
 import { Toaster } from "sonner";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { CartProvider } from "@/contexts/CartContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -32,6 +33,7 @@ export default function RootLayout({
       >
         <AuthProvider>
           <QueryProvider>
+            <CartProvider >
             {children}
             <Toaster
               position="bottom-right"
@@ -39,6 +41,7 @@ export default function RootLayout({
               closeButton
               duration={3000}
             />
+            </CartProvider>
           </QueryProvider>
         </AuthProvider>
       </body>

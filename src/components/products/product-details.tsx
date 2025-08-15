@@ -29,7 +29,9 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-
+import { useCart } from "@/hooks/use-cart";
+import { toast } from "sonner";
+import { Input } from "@/components/ui/input";
 interface ProductDetailProps {
   productId: string;
   siteId?: string;
@@ -41,7 +43,8 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({
 }) => {
   const { data: product, isLoading, error } = useProduct(parseInt(productId));
   const [selectedImage, setSelectedImage] = React.useState<string | null>(null);
-
+  const { addToCart } = useCart();
+  const [quantity, setQuantity] = React.useState(1);
   // Mock image placeholder since the API product structure doesn't include images
   const mockImage =
     "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&h=400&fit=crop";
@@ -131,7 +134,12 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({
     "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&h=400&fit=crop&crop=right",
     "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&h=400&fit=crop&crop=bottom",
   ];
-
+  const handleAddToCart = () => {
+    if (product) {
+      addToCart(product, quantity);
+      toast.success(`${quantity} x ${product.name} added to cart!`);
+    }
+  };
   // Parse price to float for calculations
   const price = parseFloat(product.price);
   const discountPercentage = 15; // Mock discount since API doesn't provide it
@@ -248,19 +256,52 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({
             </p>
 
             <div className="mt-6">
-              <div className="flex items-center gap-2 mb-3">
-                <span className="text-sm text-muted-foreground">Stock:</span>
-                <Badge variant={product.stock > 0 ? "default" : "destructive"}>
-                  {product.stock > 0
-                    ? `${product.stock} available`
-                    : "Out of stock"}
-                </Badge>
+              <div className="flex items-center gap-4 mb-4">
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                  >
+                    -
+                  </Button>
+                  <Input
+                    type="number"
+                    value={quantity}
+                    onChange={(e) =>
+                      setQuantity(Math.max(1, parseInt(e.target.value) || 1))
+                    }
+                    className="w-16 text-center"
+                    min="1"
+                    max={product.stock}
+                  />
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() =>
+                      setQuantity((q) => Math.min(product.stock, q + 1))
+                    }
+                  >
+                    +
+                  </Button>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-muted-foreground">Stock:</span>
+                  <Badge
+                    variant={product.stock > 0 ? "default" : "destructive"}
+                  >
+                    {product.stock > 0
+                      ? `${product.stock} available`
+                      : "Out of stock"}
+                  </Badge>
+                </div>
               </div>
 
               <Button
                 size="lg"
                 className="w-full"
                 disabled={product.stock === 0}
+                onClick={handleAddToCart}
               >
                 {product.stock > 0 ? "Add to Cart" : "Out of Stock"}
               </Button>
