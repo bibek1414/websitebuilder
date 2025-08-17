@@ -12,21 +12,6 @@ import SiteCard from "@/components/home/dashboard/side-card";
 import CreateSiteModal from "@/components/home/dashboard/create-site-modal";
 import LandingPage from "@/components/landing-page/landing-page";
 
-// Function to check if we're on a subdomain
-function isSubdomain(): boolean {
-  if (typeof window === "undefined") return false;
-
-  const hostname = window.location.hostname;
-  const baseDomain = process.env.NEXT_PUBLIC_BASE_DOMAIN || "nepdora.com";
-
-  return (
-    hostname.includes(".") &&
-    hostname.endsWith(`.${baseDomain}`) &&
-    !hostname.startsWith("www.") &&
-    hostname !== baseDomain
-  );
-}
-
 export default function HomePage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const router = useRouter();
@@ -47,20 +32,6 @@ export default function HomePage() {
     refetch: refetchSites,
   } = useSites();
 
-  // Check if we're on a subdomain and redirect accordingly
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      if (isSubdomain()) {
-        // If we're on a subdomain but somehow reached this page,
-        // redirect to the site-view page
-        const pathname = window.location.pathname;
-        const search = window.location.search;
-        router.replace(`/site-view${search}`);
-        return;
-      }
-    }
-  }, [router]);
-
   // Show loading state while checking authentication
   if (jwtLoading) {
     return (
@@ -73,12 +44,7 @@ export default function HomePage() {
     );
   }
 
-  // If we're on a subdomain, don't render anything (let the redirect handle it)
-  if (isSubdomain()) {
-    return null;
-  }
-
-  // Show landing page if not authenticated (main domain only)
+  // Show landing page if not authenticated
   if (!jwtLoading && !isAuthenticated) {
     return <LandingPage />;
   }
@@ -125,7 +91,7 @@ export default function HomePage() {
     displayDomain = `${siteSlug}.${baseDomain}`;
   }
 
-  // Render authenticated dashboard (main domain only)
+  // Render authenticated dashboard
   return (
     <div className="min-h-screen bg-gray-50">
       <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
@@ -158,29 +124,6 @@ export default function HomePage() {
                     {displayDomain}
                   </a>
                 </p>
-                {/* Public Site Preview Button */}
-                <div className="mt-2 flex gap-2">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => {
-                      window.open(`https://${displayDomain}`, "_blank");
-                    }}
-                    className="text-xs"
-                  >
-                    View Public Site
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => {
-                      router.push(`/preview?site=${userSite.id}`);
-                    }}
-                    className="text-xs"
-                  >
-                    Preview Mode
-                  </Button>
-                </div>
               </div>
             )}
           </div>
