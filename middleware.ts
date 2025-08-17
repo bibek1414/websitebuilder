@@ -97,40 +97,38 @@ export async function middleware(request: NextRequest) {
       authToken = tokenParam;
     }
 
-    // Enforce authentication in production
-    if (process.env.NODE_ENV === "production") {
-      if (!authToken) {
-        const loginUrl = `${protocol}://www.${baseDomain}/login?redirect=${encodeURIComponent(
-          `${protocol}://${hostname}${url.pathname}`
-        )}`;
-        return NextResponse.redirect(loginUrl);
-      }
+    // **KEY CHANGE: Don't enforce authentication for subdomains - show public view**
+    // Remove the authentication enforcement for subdomains entirely
 
-      const isValidToken = await verifyToken(authToken);
-      if (!isValidToken) {
-        const loginUrl = `${protocol}://www.${baseDomain}/login?redirect=${encodeURIComponent(
-          `${protocol}://${hostname}${url.pathname}`
-        )}`;
-        return NextResponse.redirect(loginUrl);
-      }
-    }
-
-    // Set up response with auth cookie if needed
+    // Set up response
     const response = NextResponse.next();
-    if (authToken && !request.cookies.get("authToken")?.value) {
-      response.cookies.set("authToken", authToken, {
-        domain: `.${baseDomain}`,
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
-        maxAge: 60 * 60 * 24 * 7, // 7 days
-      });
+
+    // If there's an auth token, set it as cookie for admin features
+    if (authToken) {
+      const isValidToken = await verifyToken(authToken);
+      if (isValidToken) {
+        response.cookies.set("authToken", authToken, {
+          domain: `.${baseDomain}`,
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: "lax",
+          maxAge: 60 * 60 * 24 * 7, // 7 days
+        });
+      }
     }
 
-    // Handle subdomain routing
+    // Handle subdomain routing - always show site-view (public view)
     if (url.pathname === "/" || url.pathname === "") {
       url.pathname = "/site-view";
       url.searchParams.set("subdomain", subdomain);
+
+      // Pass authentication status to the site-view page
+      if (authToken) {
+        const isValidToken = await verifyToken(authToken);
+        url.searchParams.set("authenticated", isValidToken.toString());
+      } else {
+        url.searchParams.set("authenticated", "false");
+      }
 
       // Clean auth params
       url.searchParams.delete("preserve_auth");
@@ -152,6 +150,14 @@ export async function middleware(request: NextRequest) {
       url.pathname = "/site-view";
       url.searchParams.set("subdomain", subdomain);
 
+      // Pass authentication status
+      if (authToken) {
+        const isValidToken = await verifyToken(authToken);
+        url.searchParams.set("authenticated", isValidToken.toString());
+      } else {
+        url.searchParams.set("authenticated", "false");
+      }
+
       if (pagePath) {
         url.searchParams.set("page", pagePath);
       }
@@ -170,6 +176,14 @@ export async function middleware(request: NextRequest) {
       !url.searchParams.has("subdomain")
     ) {
       url.searchParams.set("subdomain", subdomain);
+
+      // Pass authentication status
+      if (authToken) {
+        const isValidToken = await verifyToken(authToken);
+        url.searchParams.set("authenticated", isValidToken.toString());
+      } else {
+        url.searchParams.set("authenticated", "false");
+      }
 
       // Clean auth params
       url.searchParams.delete("preserve_auth");
